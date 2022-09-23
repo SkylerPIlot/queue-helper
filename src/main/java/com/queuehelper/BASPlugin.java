@@ -18,7 +18,6 @@ import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.util.Text;
-import net.runelite.http.api.RuneLiteAPI;
 import okhttp3.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
@@ -105,6 +104,9 @@ public class BASPlugin extends Plugin implements KeyListener
     @Inject
     private KeyManager keyManager;
 
+	@Inject
+	private OkHttpClient BasHttpClient;
+
     @Provides
     BASConfig provideConfig(ConfigManager configManager)
     {
@@ -127,7 +129,7 @@ public class BASPlugin extends Plugin implements KeyListener
     }
 
 	private void getupdateStrings(){
-		OkHttpClient httpClient = RuneLiteAPI.CLIENT;
+		OkHttpClient httpClient = BasHttpClient;
 
 		HttpUrl httpUrl = new HttpUrl.Builder()
 			.scheme("http")
@@ -361,7 +363,7 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private void getNextCustomer()
     {
-        OkHttpClient httpClient = RuneLiteAPI.CLIENT;
+        OkHttpClient httpClient = BasHttpClient;
         HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_GNC, "1").build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
         httpClient.newCall(request).enqueue(new Callback()
@@ -432,17 +434,17 @@ public class BASPlugin extends Plugin implements KeyListener
         }
         final HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_ATQ, "1").addQueryParameter(UPDATE_OPTION_PRI, priority).addQueryParameter(UPDATE_OPTION_NAM, name.replace(' ', ' ')).addQueryParameter(UPDATE_OPTION_FORMI, formItem).addQueryParameter(UPDATE_OPTION_QN, queueName).build();
         Request request = (new Request.Builder()).url(httpUrl).build();
-        RuneLiteAPI.CLIENT.newCall(request).enqueue(new Callback()
+		BasHttpClient.newCall(request).enqueue(new Callback()
         {
             public void onFailure(Call call, IOException e)
             {
-                BASPlugin.log.info("failed customer to queue");
+                BASPlugin.log.debug("failed customer to queue");
             }
 
             public void onResponse(Call call, Response response)
             {
                 response.close();
-                BASPlugin.log.info("added customer to queue");
+                BASPlugin.log.debug("added customer to queue");
                 Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
                 String chatMessage = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("Sent a request to add " + name + " for " + item + ".").build();
                 BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
@@ -528,7 +530,7 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private void readCSV()
     {
-        OkHttpClient httpClient = RuneLiteAPI.CLIENT;
+        OkHttpClient httpClient = BasHttpClient;
         HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_QSPR, "1").build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
         httpClient.newCall(request).enqueue(new Callback()
@@ -574,10 +576,10 @@ public class BASPlugin extends Plugin implements KeyListener
         }
         if (csv.toString().equals(""))
             return;
-        OkHttpClient httpClient = RuneLiteAPI.CLIENT;
+        OkHttpClient httpClient = BasHttpClient;
         HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_D, csv.toString()).addQueryParameter(UPDATE_OPTION_QHN, Text.sanitize(this.client.getLocalPlayer().getName())).build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
-        log.info("sending: " + httpUrl.toString());
+        log.debug("sending: " + httpUrl.toString());
         httpClient.newCall(request).enqueue(new Callback()
         {
             public void onFailure(Call call, IOException e)
@@ -594,10 +596,10 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private void markCustomer(int option, String name)
     {
-        OkHttpClient httpClient = RuneLiteAPI.CLIENT;
+        OkHttpClient httpClient = BasHttpClient;
         HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_O, option + "").addQueryParameter(UPDATE_OPTION_CN, name).build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
-        log.info("marking: " + httpUrl.toString());
+        log.debug("marking: " + httpUrl.toString());
         httpClient.newCall(request).enqueue(new Callback()
         {
             public void onFailure(Call call, IOException e)
@@ -614,7 +616,7 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private void getCustomerID(final String name)
     {
-        OkHttpClient httpClient = RuneLiteAPI.CLIENT;
+        OkHttpClient httpClient = BasHttpClient;
         HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_A, name.replace(' ', ' ')).build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
         httpClient.newCall(request).enqueue(new Callback()
@@ -660,7 +662,7 @@ public class BASPlugin extends Plugin implements KeyListener
         if (!isRank() || !this.isUpdated || chatMessage.getType() != ChatMessageType.FRIENDSCHAT)
             return;
         FriendsChatRank rank = getRank(chatMessage.getName());
-        OkHttpClient httpClient = RuneLiteAPI.CLIENT;
+        OkHttpClient httpClient = BasHttpClient;
         HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_C, chatMessage.getMessage()).addQueryParameter(UPDATE_OPTION_M, Text.removeTags(chatMessage.getName())).addQueryParameter(UPDATE_OPTION_R, Integer.toString(rank.getValue())).build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
         httpClient.newCall(request).enqueue(new Callback()
