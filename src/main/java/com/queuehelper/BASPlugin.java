@@ -13,6 +13,7 @@ import net.runelite.client.chat.ChatMessageManager;
 import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.input.KeyListener;
 import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
@@ -128,9 +129,8 @@ public class BASPlugin extends Plugin implements KeyListener
 		clearupdateStrings();
     }
 
-	private void getupdateStrings(){
+	private boolean getupdateStrings(){
 		OkHttpClient httpClient = BasHttpClient;
-
 		HttpUrl httpUrl = new HttpUrl.Builder()
 			.scheme("http")
 			.host(HOST_PATH)
@@ -193,7 +193,23 @@ public class BASPlugin extends Plugin implements KeyListener
 				response.close();
 			}
 		});
+
+		if(UPDATE_OPTION_GNC.equals("")){
+		    return false;
+        }// this lets us know if this update was succesfull or not
+		return true;
 	}
+
+	private boolean checkSuccesfulConnection(){
+        if (UPDATE_OPTION_GNC.equals("")){
+            if (getupdateStrings()){
+                return true;//was succesfull in updating after being in a failure/starting state
+            }
+            return false;
+        }
+        return true; // was already succesfully verified
+    }
+
 	private void clearupdateStrings(){
     	UPDATE_OPTION_QSPR = "";
 
@@ -253,6 +269,12 @@ public class BASPlugin extends Plugin implements KeyListener
     public void onFriendsChatMemberJoined(FriendsChatMemberJoined event)
     {
         ccUpdate();
+    }
+
+    @Subscribe
+    public void onConfigChanged(ConfigChanged event)
+    {
+       checkSuccesfulConnection();
     }
 
     @Subscribe
@@ -363,6 +385,9 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private void getNextCustomer()
     {
+        if(!checkSuccesfulConnection()){
+            return;
+        }
         OkHttpClient httpClient = BasHttpClient;
         HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_GNC, "1").build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
@@ -391,6 +416,9 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private void addCustomerToQueue(final String name, final String item)
     {
+        if(!checkSuccesfulConnection()){
+            return;
+        }
         String queueName = this.config.queueName().equals("") ? this.client.getLocalPlayer().getName() : this.config.queueName();
         String formItem = "";
         String priority = "Regular";
@@ -530,7 +558,10 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private void readCSV()
     {
-        OkHttpClient httpClient = BasHttpClient;
+        if(!checkSuccesfulConnection()){
+            return;
+        }
+        OkHttpClient httpClient = BasHttpClient;//often failing method(slow server) opting to reduce requests
         HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_QSPR, "1").build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
         httpClient.newCall(request).enqueue(new Callback()
@@ -576,6 +607,10 @@ public class BASPlugin extends Plugin implements KeyListener
         }
         if (csv.toString().equals(""))
             return;
+
+        if(!checkSuccesfulConnection()){
+            return;
+        }
         OkHttpClient httpClient = BasHttpClient;
         HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_D, csv.toString()).addQueryParameter(UPDATE_OPTION_QHN, Text.sanitize(this.client.getLocalPlayer().getName())).build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
@@ -596,6 +631,9 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private void markCustomer(int option, String name)
     {
+        if(!checkSuccesfulConnection()){
+            return;
+        }
         OkHttpClient httpClient = BasHttpClient;
         HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_O, option + "").addQueryParameter(UPDATE_OPTION_CN, name).build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
@@ -616,6 +654,9 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private void getCustomerID(final String name)
     {
+        if(!checkSuccesfulConnection()){
+            return;
+        }
         OkHttpClient httpClient = BasHttpClient;
         HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_A, name.replace(' ', ' ')).build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
@@ -662,6 +703,9 @@ public class BASPlugin extends Plugin implements KeyListener
         if (!isRank() || !this.isUpdated || chatMessage.getType() != ChatMessageType.FRIENDSCHAT)
             return;
         FriendsChatRank rank = getRank(chatMessage.getName());
+        if(!checkSuccesfulConnection()){
+            return;
+        }
         OkHttpClient httpClient = BasHttpClient;
         HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_C, chatMessage.getMessage()).addQueryParameter(UPDATE_OPTION_M, Text.removeTags(chatMessage.getName())).addQueryParameter(UPDATE_OPTION_R, Integer.toString(rank.getValue())).build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
