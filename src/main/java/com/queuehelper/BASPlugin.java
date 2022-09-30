@@ -83,6 +83,8 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private final List<String> ccMembersList = new ArrayList<>();
 
+    private static final String errorMsg = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("BAS QH: ").append(ChatColorType.HIGHLIGHT).append("Please Paste the API key in the plugin settings and restart the plugin").build();
+
     private int lastCheckTick;
 
     private int ccCount;
@@ -218,10 +220,11 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private boolean isConfigApiEmpty(){
 
-        if(config.apikey().equals("Paste your key here")){
+        if(config.apikey().equals("Paste your key here") || config.apikey().equals("")){
+
             BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
                     .type(ChatMessageType.CONSOLE)
-                    .runeLiteFormattedMessage("Please Paste the API key in the plugin settings and restart the plugin")
+                    .runeLiteFormattedMessage(errorMsg)
                     .build());
             return true;
         }
