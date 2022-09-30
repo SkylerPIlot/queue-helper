@@ -63,6 +63,6 @@ public interface BASConfig extends Config {
 	)
 	default String apikey()
 	{
-		return "";
+		return "Paste your key here";
 	}
 }

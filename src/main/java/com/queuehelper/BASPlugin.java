@@ -83,6 +83,8 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private final List<String> ccMembersList = new ArrayList<>();
 
+    private static final String errorMsg = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("BAS QH: ").append(ChatColorType.HIGHLIGHT).append("Please Paste the API key in the plugin settings and restart the plugin").build();
+
     private int lastCheckTick;
 
     private int ccCount;
@@ -130,6 +132,12 @@ public class BASPlugin extends Plugin implements KeyListener
     }
 
 	private boolean getupdateStrings(){
+
+        if (isConfigApiEmpty()){
+            return false;
+
+        }
+
 		OkHttpClient httpClient = BasHttpClient;
 		HttpUrl httpUrl = new HttpUrl.Builder()
 			.scheme("http")
@@ -208,6 +216,20 @@ public class BASPlugin extends Plugin implements KeyListener
             return false;
         }
         return true; // was already succesfully verified
+    }
+
+    private boolean isConfigApiEmpty(){
+
+        if(config.apikey().equals("Paste your key here") || config.apikey().equals("")){
+
+            BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
+                    .type(ChatMessageType.CONSOLE)
+                    .runeLiteFormattedMessage(errorMsg)
+                    .build());
+            return true;
+        }
+        return false;
+
     }
 
 	private void clearupdateStrings(){
@@ -385,6 +407,9 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private void getNextCustomer()
     {
+        if (isConfigApiEmpty()){
+            return;
+        }
         if(!checkSuccesfulConnection()){
             return;
         }
@@ -416,6 +441,9 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private void addCustomerToQueue(final String name, final String item)
     {
+        if (isConfigApiEmpty()){
+            return;
+        }
         if(!checkSuccesfulConnection()){
             return;
         }
@@ -558,6 +586,9 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private void readCSV()
     {
+        if (isConfigApiEmpty()){
+            return;
+        }
         if(!checkSuccesfulConnection()){
             return;
         }
@@ -607,7 +638,9 @@ public class BASPlugin extends Plugin implements KeyListener
         }
         if (csv.toString().equals(""))
             return;
-
+        if (isConfigApiEmpty()){
+            return;
+        }
         if(!checkSuccesfulConnection()){
             return;
         }
@@ -631,6 +664,9 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private void markCustomer(int option, String name)
     {
+        if (isConfigApiEmpty()){
+            return;
+        }
         if(!checkSuccesfulConnection()){
             return;
         }
@@ -654,6 +690,9 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private void getCustomerID(final String name)
     {
+        if (isConfigApiEmpty()){
+            return;
+        }
         if(!checkSuccesfulConnection()){
             return;
         }
@@ -703,6 +742,9 @@ public class BASPlugin extends Plugin implements KeyListener
         if (!isRank() || !this.isUpdated || chatMessage.getType() != ChatMessageType.FRIENDSCHAT)
             return;
         FriendsChatRank rank = getRank(chatMessage.getName());
+        if (isConfigApiEmpty()){
+            return;
+        }
         if(!checkSuccesfulConnection()){
             return;
         }
