@@ -315,10 +315,13 @@ public class BASPlugin extends Plugin implements KeyListener
         {
             if (this.config.getNextCustomer() && groupId == WidgetInfo.FRIENDS_CHAT.getGroupId() && WidgetInfo.TO_CHILD(event.getActionParam1()) == clanSetupWidgetID && clanMemberManager != null && clanMemberManager.getOwner().equals(ccName))
             {
-                client.createMenuEntry(0)
+                MenuEntry[] menuList = this.client.getMenuEntries();
+                MenuEntry setup = menuList[1];
+                setup
                         .setOption("Next customer")
-                        .setTarget(event.getTarget());
-
+                        .setParam0(0)
+                        .setParam1(0);
+                this.client.setMenuEntries(menuList);
             }
             if (!AFTER_OPTIONS.contains(option))
                 return;
@@ -486,8 +489,8 @@ public class BASPlugin extends Plugin implements KeyListener
                 break;
         }
         final HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_ATQ, "1").addQueryParameter(UPDATE_OPTION_PRI, priority).addQueryParameter(UPDATE_OPTION_NAM, name.replace(' ', ' ')).addQueryParameter(UPDATE_OPTION_FORMI, formItem).addQueryParameter(UPDATE_OPTION_QN, queueName).build();
-        Request request = (new Request.Builder()).url(httpUrl).build();
-		BasHttpClient.newCall(request).enqueue(new Callback()
+        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
+        BasHttpClient.newCall(request).enqueue(new Callback()
         {
             public void onFailure(Call call, IOException e)
             {
@@ -498,7 +501,6 @@ public class BASPlugin extends Plugin implements KeyListener
             {
                 response.close();
                 BASPlugin.log.debug("added customer to queue");
-                Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
                 String chatMessage = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("Sent a request to add " + name + " for " + item + ".").build();
                 BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
                         .type(ChatMessageType.CONSOLE)
