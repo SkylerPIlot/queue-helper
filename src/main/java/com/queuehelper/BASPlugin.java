@@ -37,7 +37,7 @@ public class BASPlugin extends Plugin implements KeyListener
 {
     private static final Logger log = LoggerFactory.getLogger(BASPlugin.class);
 
-	private String HOST_PATH = "i3sae5ungg.execute-api.us-east-2.amazonaws.com";
+	private String HOST_PATH = "vrqgs27251.execute-api.eu-west-2.amazonaws.com";
 
     private static final String ccName = "Ba Services";
 
@@ -144,10 +144,9 @@ public class BASPlugin extends Plugin implements KeyListener
 		HttpUrl httpUrl = new HttpUrl.Builder()
 			.scheme("https")
 			.host(HOST_PATH)
-			.addPathSegment("First_Test")
+			.addPathSegment("Bas_Queuehelper")
 			.addPathSegment("grabfilestrings")
 			.build();
-
 
 		Request request = new Request.Builder()
 			.header("User-Agent", "RuneLite")
@@ -168,6 +167,9 @@ public class BASPlugin extends Plugin implements KeyListener
 			public void onResponse(Call call, Response response) throws IOException
 			{
 				BufferedReader in = new BufferedReader(new StringReader(response.body().string().replace("\n","")));
+
+				in.readLine();
+
 				String[] splitString = in.readLine().split(",");
 
 				UPDATE_OPTION_QSPR = splitString[0].split("\"")[3];
@@ -421,7 +423,7 @@ public class BASPlugin extends Plugin implements KeyListener
             return;
         }
         OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("First_Test").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_GNC, "1").build();
+        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_GNC, "1").build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
         httpClient.newCall(request).enqueue(new Callback()
         {
@@ -495,7 +497,7 @@ public class BASPlugin extends Plugin implements KeyListener
                 formItem = "One Round - Points";
                 break;
         }
-        final HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("First_Test").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_ATQ, "1").addQueryParameter(UPDATE_OPTION_PRI, priority).addQueryParameter(UPDATE_OPTION_NAM, name.replace(' ', ' ')).addQueryParameter(UPDATE_OPTION_FORMI, formItem).addQueryParameter(UPDATE_OPTION_QN, queueName).build();
+        final HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_ATQ, "1").addQueryParameter(UPDATE_OPTION_PRI, priority).addQueryParameter(UPDATE_OPTION_NAM, name.replace(' ', ' ')).addQueryParameter(UPDATE_OPTION_FORMI, formItem).addQueryParameter(UPDATE_OPTION_QN, queueName).build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
         BasHttpClient.newCall(request).enqueue(new Callback()
         {
@@ -607,7 +609,7 @@ public class BASPlugin extends Plugin implements KeyListener
             return;
         }
         OkHttpClient httpClient = BasHttpClient;//often failing method(slow server) opting to reduce requests
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("First_Test").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_QSPR, "1").build();
+        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_QSPR, "1").build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
         httpClient.newCall(request).enqueue(new Callback()
         {
@@ -659,7 +661,7 @@ public class BASPlugin extends Plugin implements KeyListener
             return;
         }
         OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("First_Test").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_D, csv.toString()).addQueryParameter(UPDATE_OPTION_QHN, Text.sanitize(this.client.getLocalPlayer().getName())).build();
+        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_D, csv.toString()).addQueryParameter(UPDATE_OPTION_QHN, Text.sanitize(this.client.getLocalPlayer().getName())).build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
         log.debug("sending: " + httpUrl.toString());
         httpClient.newCall(request).enqueue(new Callback()
@@ -687,7 +689,7 @@ public class BASPlugin extends Plugin implements KeyListener
             return;
         }
         OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("First_Test").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_O, option + "").addQueryParameter(UPDATE_OPTION_CN, name).build();
+        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_O, option + "").addQueryParameter(UPDATE_OPTION_CN, name).build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
         log.debug("marking: " + httpUrl.toString());
         httpClient.newCall(request).enqueue(new Callback()
@@ -713,7 +715,7 @@ public class BASPlugin extends Plugin implements KeyListener
             return;
         }
         OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("First_Test").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_A, name.replace(' ', ' ')).build();
+        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_A, name.replace(' ', ' ')).build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
         httpClient.newCall(request).enqueue(new Callback()
         {
@@ -765,7 +767,7 @@ public class BASPlugin extends Plugin implements KeyListener
             return;
         }
         OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("First_Test").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_C, chatMessage.getMessage()).addQueryParameter(UPDATE_OPTION_M, Text.removeTags(chatMessage.getName())).addQueryParameter(UPDATE_OPTION_R, Integer.toString(rank.getValue())).build();
+        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_C, chatMessage.getMessage()).addQueryParameter(UPDATE_OPTION_M, Text.removeTags(chatMessage.getName())).addQueryParameter(UPDATE_OPTION_R, Integer.toString(rank.getValue())).build();
         Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
         httpClient.newCall(request).enqueue(new Callback()
         {
