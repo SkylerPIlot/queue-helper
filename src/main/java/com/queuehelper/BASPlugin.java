@@ -37,7 +37,7 @@ public class BASPlugin extends Plugin implements KeyListener
 {
     private static final Logger log = LoggerFactory.getLogger(BASPlugin.class);
 
-	private String HOST_PATH = "bas-qh.herokuapp.com";
+	private String HOST_PATH = "vrqgs27251.execute-api.eu-west-2.amazonaws.com";
 
     private static final String ccName = "Ba Services";
 
@@ -95,6 +95,8 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private boolean isUpdated = true;
 
+	private boolean isStarting = true;
+
     @Inject
     private Client client;
 
@@ -140,17 +142,17 @@ public class BASPlugin extends Plugin implements KeyListener
 
 		OkHttpClient httpClient = BasHttpClient;
 		HttpUrl httpUrl = new HttpUrl.Builder()
-			.scheme("http")
+			.scheme("https")
 			.host(HOST_PATH)
-			.addPathSegment("bas")
+			.addPathSegment("Bas_Queuehelper")
 			.addPathSegment("grabfilestrings")
 			.build();
-
 
 		Request request = new Request.Builder()
 			.header("User-Agent", "RuneLite")
 			.url(httpUrl)
-			.header("APIKEY", config.apikey())
+			.header("Content-Type", "application/json")
+			.header("x-api-key", config.apikey())
 			.build();
 
 		httpClient.newCall(request).enqueue(new Callback()
@@ -164,9 +166,13 @@ public class BASPlugin extends Plugin implements KeyListener
 			@Override
 			public void onResponse(Call call, Response response) throws IOException
 			{
-				BufferedReader in = new BufferedReader(new StringReader(response.body().string()));
+				BufferedReader in = new BufferedReader(new StringReader(response.body().string().replace("\n","")));
+
+				in.readLine();
+
 				String[] splitString = in.readLine().split(",");
-				UPDATE_OPTION_QSPR = splitString[0];
+
+				UPDATE_OPTION_QSPR = splitString[0].split("\"")[3];
 
 				UPDATE_OPTION_GNC = splitString[1];
 
@@ -318,10 +324,13 @@ public class BASPlugin extends Plugin implements KeyListener
         {
             if (this.config.getNextCustomer() && groupId == WidgetInfo.FRIENDS_CHAT.getGroupId() && WidgetInfo.TO_CHILD(event.getActionParam1()) == clanSetupWidgetID && clanMemberManager != null && clanMemberManager.getOwner().equals(ccName))
             {
-                client.createMenuEntry(0)
+                MenuEntry[] menuList = this.client.getMenuEntries();
+                MenuEntry setup = menuList[1];
+                setup
                         .setOption("Next customer")
-                        .setTarget(event.getTarget());
-
+                        .setParam0(0)
+                        .setParam1(0);
+                this.client.setMenuEntries(menuList);
             }
             if (!AFTER_OPTIONS.contains(option))
                 return;
@@ -414,8 +423,8 @@ public class BASPlugin extends Plugin implements KeyListener
             return;
         }
         OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_GNC, "1").build();
-        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
+        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_GNC, "1").build();
+        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
         httpClient.newCall(request).enqueue(new Callback()
         {
             public void onFailure(Call call, IOException e)
@@ -488,9 +497,9 @@ public class BASPlugin extends Plugin implements KeyListener
                 formItem = "One Round - Points";
                 break;
         }
-        final HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_ATQ, "1").addQueryParameter(UPDATE_OPTION_PRI, priority).addQueryParameter(UPDATE_OPTION_NAM, name.replace(' ', ' ')).addQueryParameter(UPDATE_OPTION_FORMI, formItem).addQueryParameter(UPDATE_OPTION_QN, queueName).build();
-        Request request = (new Request.Builder()).url(httpUrl).build();
-		BasHttpClient.newCall(request).enqueue(new Callback()
+        final HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_ATQ, "1").addQueryParameter(UPDATE_OPTION_PRI, priority).addQueryParameter(UPDATE_OPTION_NAM, name.replace(' ', ' ')).addQueryParameter(UPDATE_OPTION_FORMI, formItem).addQueryParameter(UPDATE_OPTION_QN, queueName).build();
+        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
+        BasHttpClient.newCall(request).enqueue(new Callback()
         {
             public void onFailure(Call call, IOException e)
             {
@@ -501,7 +510,6 @@ public class BASPlugin extends Plugin implements KeyListener
             {
                 response.close();
                 BASPlugin.log.debug("added customer to queue");
-                Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
                 String chatMessage = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("Sent a request to add " + name + " for " + item + ".").build();
                 BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
                         .type(ChatMessageType.CONSOLE)
@@ -522,7 +530,15 @@ public class BASPlugin extends Plugin implements KeyListener
     }
 
     private void ccUpdate()
-    {
+    {//on startup this spams like 8 calls and idk how to fix
+    	if(isStarting)
+			{
+				isUpdated = false;
+				isStarting = false;
+				readCSV();
+				updateQueue();
+
+			}
         if (this.lastCheckTick == this.client.getTickCount() || !isRank() || !this.isUpdated)
             return;
         readCSV();
@@ -593,8 +609,8 @@ public class BASPlugin extends Plugin implements KeyListener
             return;
         }
         OkHttpClient httpClient = BasHttpClient;//often failing method(slow server) opting to reduce requests
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_QSPR, "1").build();
-        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
+        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_QSPR, "1").build();
+        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
         httpClient.newCall(request).enqueue(new Callback()
         {
             public void onFailure(Call call, IOException e)
@@ -645,18 +661,20 @@ public class BASPlugin extends Plugin implements KeyListener
             return;
         }
         OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_D, csv.toString()).addQueryParameter(UPDATE_OPTION_QHN, Text.sanitize(this.client.getLocalPlayer().getName())).build();
-        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
+        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_D, csv.toString()).addQueryParameter(UPDATE_OPTION_QHN, Text.sanitize(this.client.getLocalPlayer().getName())).build();
+        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
         log.debug("sending: " + httpUrl.toString());
         httpClient.newCall(request).enqueue(new Callback()
         {
             public void onFailure(Call call, IOException e)
             {
                 BASPlugin.log.warn("Error sending http request3." + e.getMessage());
+				isUpdated = true;
             }
 
             public void onResponse(Call call, Response response) throws IOException
             {
+            	isUpdated = true;
                 response.close();
             }
         });
@@ -671,8 +689,8 @@ public class BASPlugin extends Plugin implements KeyListener
             return;
         }
         OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_O, option + "").addQueryParameter(UPDATE_OPTION_CN, name).build();
-        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
+        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_O, option + "").addQueryParameter(UPDATE_OPTION_CN, name).build();
+        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
         log.debug("marking: " + httpUrl.toString());
         httpClient.newCall(request).enqueue(new Callback()
         {
@@ -697,8 +715,8 @@ public class BASPlugin extends Plugin implements KeyListener
             return;
         }
         OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_A, name.replace(' ', ' ')).build();
-        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
+        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_A, name.replace(' ', ' ')).build();
+        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
         httpClient.newCall(request).enqueue(new Callback()
         {
             public void onFailure(Call call, IOException e)
@@ -749,8 +767,8 @@ public class BASPlugin extends Plugin implements KeyListener
             return;
         }
         OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("http").host(HOST_PATH).addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_C, chatMessage.getMessage()).addQueryParameter(UPDATE_OPTION_M, Text.removeTags(chatMessage.getName())).addQueryParameter(UPDATE_OPTION_R, Integer.toString(rank.getValue())).build();
-        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("APIKEY", config.apikey()).url(httpUrl).build();
+        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_C, chatMessage.getMessage()).addQueryParameter(UPDATE_OPTION_M, Text.removeTags(chatMessage.getName())).addQueryParameter(UPDATE_OPTION_R, Integer.toString(rank.getValue())).build();
+        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
         httpClient.newCall(request).enqueue(new Callback()
         {
             public void onFailure(Call call, IOException e)
