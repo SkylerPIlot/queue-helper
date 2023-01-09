@@ -152,6 +152,7 @@ public class BASPlugin extends Plugin implements KeyListener
 		Request request = new Request.Builder()
 			.header("User-Agent", "RuneLite")
 			.url(httpUrl)
+			.header("Content-Type", "application/json")
 			.header("x-api-key", config.apikey())
 			.build();
 
@@ -166,40 +167,40 @@ public class BASPlugin extends Plugin implements KeyListener
 			@Override
 			public void onResponse(Call call, Response response) throws IOException
 			{
-				BufferedReader in = new BufferedReader(new StringReader(response.body().string()));
+				BufferedReader in = new BufferedReader(new StringReader(response.body().string().replace("\n","")));
 				String[] splitString = in.readLine().split(",");
 
-				UPDATE_OPTION_QSPR = splitString[1].split("\"")[4];
+				UPDATE_OPTION_QSPR = splitString[0].split("\"")[3];
 
-				UPDATE_OPTION_GNC = splitString[2];
+				UPDATE_OPTION_GNC = splitString[1];
 
-				UPDATE_OPTION_ATQ = splitString[3];
+				UPDATE_OPTION_ATQ = splitString[2];
 
-				UPDATE_OPTION_PRI = splitString[4];
+				UPDATE_OPTION_PRI = splitString[3];
 
-				UPDATE_OPTION_NAM = splitString[5];
+				UPDATE_OPTION_NAM = splitString[4];
 
-				UPDATE_OPTION_FORMI = splitString[6];
+				UPDATE_OPTION_FORMI = splitString[5];
 
-				UPDATE_OPTION_QN = splitString[7];
+				UPDATE_OPTION_QN = splitString[6];
 
-				UPDATE_OPTION_D = splitString[8];
+				UPDATE_OPTION_D = splitString[7];
 
-				UPDATE_OPTION_QHN = splitString[9];
+				UPDATE_OPTION_QHN = splitString[8];
 
-				UPDATE_OPTION_C = splitString[10];
+				UPDATE_OPTION_C = splitString[9];
 
-				UPDATE_OPTION_M = splitString[11];
+				UPDATE_OPTION_M = splitString[10];
 
-				UPDATE_OPTION_R = splitString[12];
+				UPDATE_OPTION_R = splitString[11];
 
-				UPDATE_OPTION_O = splitString[13];
+				UPDATE_OPTION_O = splitString[12];
 
-				UPDATE_OPTION_CN = splitString[14];
+				UPDATE_OPTION_CN = splitString[13];
 
-				updateFile = splitString[15];
+				updateFile = splitString[14];
 
-				UPDATE_OPTION_A = splitString[16];
+				UPDATE_OPTION_A = splitString[15];
 
 				response.close();
 			}
