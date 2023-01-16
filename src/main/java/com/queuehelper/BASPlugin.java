@@ -97,6 +97,8 @@ public class BASPlugin extends Plugin implements KeyListener
 
 	private boolean isStarting = true;
 
+	private boolean msgIn = false;
+
     @Inject
     private Client client;
 
@@ -586,7 +588,7 @@ public class BASPlugin extends Plugin implements KeyListener
                                         }
                                         if (user[0].equals("P")) {
                                             //member.setTextColor(6604900);
-											member.setTextColor(6579400);//sets both the same color/removes prem
+											member.setTextColor(6604900);//sets both the same color/removes prem
                                             continue;
                                         }
                                         member.setTextColor(6579400);
@@ -730,12 +732,8 @@ public class BASPlugin extends Plugin implements KeyListener
 
             public void onResponse(Call call, Response response) throws IOException
             {
-                BufferedReader in = new BufferedReader(new StringReader(response.body().string()));
-                String CustId = "";
-                String s;
-                while ((s = in.readLine()) != null)
-                    CustId = s;
-                String chatMessage = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("ID # for " + name + ": ").append(ChatColorType.HIGHLIGHT).append(CustId).build();
+				String test = response.body().string().replace("\n","");
+                String chatMessage = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("ID # for " + name + ": ").append(ChatColorType.HIGHLIGHT).append(test).build();
                 BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
                         .type(ChatMessageType.CONSOLE)
                         .runeLiteFormattedMessage(chatMessage)
@@ -754,33 +752,111 @@ public class BASPlugin extends Plugin implements KeyListener
         return (friendsChatMember != null) ? friendsChatMember.getRank() : FriendsChatRank.UNRANKED;
     }
 
+    private int timestampRound(int timestamp){
+
+
+    	switch(timestamp){
+			case 9:
+			case 8:
+			case 7:
+				return 2;
+			case 5:
+			case 6:
+			case 4:
+				return 1;
+			case 1:
+			case 2:
+			case 3:
+				return 0;
+
+			default:
+				return 0;
+		}
+
+	}
+
+
+
+
     @Subscribe
     public void onChatMessage(ChatMessage chatMessage)
     {
         if (!isRank() || !this.isUpdated || chatMessage.getType() != ChatMessageType.FRIENDSCHAT)
             return;
         FriendsChatRank rank = getRank(chatMessage.getName());
-        if (isConfigApiEmpty()){
-            return;
-        }
-        if(!checkSuccesfulConnection()){
-            return;
-        }
-        OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_C, chatMessage.getMessage()).addQueryParameter(UPDATE_OPTION_M, Text.removeTags(chatMessage.getName())).addQueryParameter(UPDATE_OPTION_R, Integer.toString(rank.getValue())).build();
-        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
-        httpClient.newCall(request).enqueue(new Callback()
-        {
-            public void onFailure(Call call, IOException e)
-            {
-//                BASPlugin.log.warn("Error sending http request5." + e.getMessage());
-            }
+		if (isConfigApiEmpty()){
+			return;
+		}
+		if(!checkSuccesfulConnection()){
+			return;
+		}
 
-            public void onResponse(Call call, Response response) throws IOException
-            {
-                response.close();
-            }
-        });
+		try{
+			int numMsg = (int) chatMessage.getMessage().charAt(0);
+			if((48 <= numMsg && numMsg <= 53) && (chatMessage.getMessage().contains("a") || chatMessage.getMessage().contains("c") || chatMessage.getMessage().contains("d") || chatMessage.getMessage().contains("h") || (chatMessage.getMessage().contains("r") && !chatMessage.getMessage().contains("reg"))))
+			{
+				if(48 <= ((int) chatMessage.getMessage().charAt(1)) && ((int) chatMessage.getMessage().charAt(1)) <= 57){
+					msgIn = false;
+					}
+				else{
+					msgIn = true;
+				}
+
+			}
+		}
+		catch (NumberFormatException ex){
+			log.debug("Normal behavior");
+		}
+
+
+		try{
+			int numMsg = Integer.parseInt(chatMessage.getMessage());
+			if(0 <= numMsg  && numMsg <= 5)
+			{
+				msgIn = true;
+			}
+		}
+		catch (NumberFormatException ex){
+			log.debug("Normal behavior");
+		}
+
+		if (chatMessage.getMessage().toLowerCase().equals("jf") || chatMessage.getMessage().toLowerCase().equals("out")){
+			msgIn = true;
+		}
+
+
+        if ((chatMessage.getMessage().contains("+") && chatMessage.getMessage().charAt(0) == '+') || msgIn)
+		{
+			msgIn = false;
+
+			int close = timestampRound((chatMessage.getTimestamp()%10));
+
+
+			String unhashedMsg = chatMessage.getName() + chatMessage.getMessage() + (((int)(chatMessage.getTimestamp()/10)*10) +close);
+			log.info(unhashedMsg);
+			int hasedMsg = unhashedMsg.hashCode();
+			log.info(String.valueOf(hasedMsg));
+			OkHttpClient httpClient = BasHttpClient;
+			HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("disc").build();
+			Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).header("Content-Type", "application/json").header("username",chatMessage.getName().replace(' ', ' ')).header("msg",chatMessage.getMessage()).header("hash",String.valueOf(hasedMsg)).build();
+
+			httpClient.newCall(request).enqueue(new Callback()
+			{
+				public void onFailure(Call call, IOException e)
+				{
+//                BASPlugin.log.warn("Error sending http request5." + e.getMessage());
+				}
+
+				public void onResponse(Call call, Response response) throws IOException
+				{
+					BufferedReader in = new BufferedReader(new StringReader(response.body().string()));
+					log.info(in.readLine());
+					log.info(in.readLine());
+					log.info(in.readLine());
+					response.close();
+				}
+			});
+		}
     }
 
     public void keyTyped(KeyEvent e)
