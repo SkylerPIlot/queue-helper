@@ -37,7 +37,7 @@ public class BASPlugin extends Plugin implements KeyListener
 {
     private static final Logger log = LoggerFactory.getLogger(BASPlugin.class);
 
-	private String HOST_PATH = "i3sae5ungg.execute-api.us-east-2.amazonaws.com";
+	private String HOST_PATH = "vrqgs27251.execute-api.eu-west-2.amazonaws.com";
 
     private static final String ccName = "Ba Services";
 
@@ -169,6 +169,8 @@ public class BASPlugin extends Plugin implements KeyListener
 			public void onResponse(Call call, Response response) throws IOException
 			{
 				BufferedReader in = new BufferedReader(new StringReader(response.body().string().replace("\n","")));
+
+				in.readLine();
 
 				String[] splitString = in.readLine().split(",");
 
@@ -791,13 +793,19 @@ public class BASPlugin extends Plugin implements KeyListener
 
 		try{
 			int numMsg = (int) chatMessage.getMessage().charAt(0);
-			if((48 <= numMsg  && numMsg <= 53) && (chatMessage.getMessage().contains("a") || chatMessage.getMessage().contains("c") || chatMessage.getMessage().contains("d") || chatMessage.getMessage().contains("h") || (chatMessage.getMessage().contains("r") && !chatMessage.getMessage().contains("reg"))))
+			if((48 <= numMsg && numMsg <= 53) && (chatMessage.getMessage().contains("a") || chatMessage.getMessage().contains("c") || chatMessage.getMessage().contains("d") || chatMessage.getMessage().contains("h") || (chatMessage.getMessage().contains("r") && !chatMessage.getMessage().contains("reg"))))
 			{
-				msgIn = true;
+				if(48 <= ((int) chatMessage.getMessage().charAt(1)) && ((int) chatMessage.getMessage().charAt(1)) <= 57){
+					msgIn = false;
+					}
+				else{
+					msgIn = true;
+				}
+
 			}
 		}
 		catch (NumberFormatException ex){
-			ex.printStackTrace();
+			log.debug("Normal behavior");
 		}
 
 
@@ -809,7 +817,7 @@ public class BASPlugin extends Plugin implements KeyListener
 			}
 		}
 		catch (NumberFormatException ex){
-			ex.printStackTrace();
+			log.debug("Normal behavior");
 		}
 
 		if (chatMessage.getMessage().toLowerCase().equals("jf") || chatMessage.getMessage().toLowerCase().equals("out")){
@@ -841,6 +849,10 @@ public class BASPlugin extends Plugin implements KeyListener
 
 				public void onResponse(Call call, Response response) throws IOException
 				{
+					BufferedReader in = new BufferedReader(new StringReader(response.body().string()));
+					log.info(in.readLine());
+					log.info(in.readLine());
+					log.info(in.readLine());
 					response.close();
 				}
 			});
