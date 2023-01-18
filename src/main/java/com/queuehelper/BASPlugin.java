@@ -752,31 +752,6 @@ public class BASPlugin extends Plugin implements KeyListener
         return (friendsChatMember != null) ? friendsChatMember.getRank() : FriendsChatRank.UNRANKED;
     }
 
-    private int timestampRound(int timestamp){
-
-
-    	switch(timestamp){
-			case 9:
-			case 8:
-			case 7:
-				return 2;
-			case 5:
-			case 6:
-			case 4:
-				return 1;
-			case 1:
-			case 2:
-			case 3:
-				return 0;
-
-			default:
-				return 0;
-		}
-
-	}
-
-
-
 
     @Subscribe
     public void onChatMessage(ChatMessage chatMessage)
@@ -833,10 +808,10 @@ public class BASPlugin extends Plugin implements KeyListener
 		{
 			msgIn = false;
 
-			int close = timestampRound((chatMessage.getTimestamp()%10));
 
 
-			String unhashedMsg = chatMessage.getName() + chatMessage.getMessage() + (((int)(chatMessage.getTimestamp()/10)*10) +close);
+
+			String unhashedMsg = chatMessage.getName() + chatMessage.getMessage() + (((int)(chatMessage.getTimestamp()/10)*10));
 			//log.info(unhashedMsg);
 			int hasedMsg = unhashedMsg.hashCode();
 			//log.info(String.valueOf(hasedMsg));
