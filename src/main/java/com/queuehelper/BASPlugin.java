@@ -837,9 +837,9 @@ public class BASPlugin extends Plugin implements KeyListener
 
 
 			String unhashedMsg = chatMessage.getName() + chatMessage.getMessage() + (((int)(chatMessage.getTimestamp()/10)*10) +close);
-			log.info(unhashedMsg);
+			//log.info(unhashedMsg);
 			int hasedMsg = unhashedMsg.hashCode();
-			log.info(String.valueOf(hasedMsg));
+			//log.info(String.valueOf(hasedMsg));
 			OkHttpClient httpClient = BasHttpClient;
 			HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("disc").build();
 			Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).header("Content-Type", "application/json").header("username",chatMessage.getName().replace(' ', ' ')).header("msg",chatMessage.getMessage()).header("hash",String.valueOf(hasedMsg)).build();
@@ -854,9 +854,9 @@ public class BASPlugin extends Plugin implements KeyListener
 				public void onResponse(Call call, Response response) throws IOException
 				{
 					BufferedReader in = new BufferedReader(new StringReader(response.body().string()));
-					log.info(in.readLine());
-					log.info(in.readLine());
-					log.info(in.readLine());
+					//log.info(in.readLine());
+					//log.info(in.readLine());
+					//#log.info(in.readLine());
 					response.close();
 				}
 			});
