@@ -588,7 +588,7 @@ public class BASPlugin extends Plugin implements KeyListener
                                         }
                                         if (user[0].equals("P")) {
                                             //member.setTextColor(6604900);
-											member.setTextColor(6604900);//sets both the same color/removes prem
+											member.setTextColor(6579400);//sets both the same color/removes prem
                                             continue;
                                         }
                                         member.setTextColor(6579400);
@@ -793,7 +793,7 @@ public class BASPlugin extends Plugin implements KeyListener
 
 		try{
 			int numMsg = (int) chatMessage.getMessage().charAt(0);
-			if((48 <= numMsg && numMsg <= 53) && (chatMessage.getMessage().contains("a") || chatMessage.getMessage().contains("c") || chatMessage.getMessage().contains("d") || chatMessage.getMessage().contains("h") || (chatMessage.getMessage().contains("r") && !chatMessage.getMessage().contains("reg"))))
+			if((48 <= numMsg && numMsg <= 53) && (chatMessage.getMessage().contains("out") || chatMessage.getMessage().contains("f") || chatMessage.getMessage().contains("a") || chatMessage.getMessage().contains("*") || chatMessage.getMessage().contains("c") || chatMessage.getMessage().contains("d") || chatMessage.getMessage().contains("h") || (chatMessage.getMessage().contains("r") && !chatMessage.getMessage().contains("reg"))))
 			{
 				if(48 <= ((int) chatMessage.getMessage().charAt(1)) && ((int) chatMessage.getMessage().charAt(1)) <= 57){
 					msgIn = false;
@@ -820,9 +820,13 @@ public class BASPlugin extends Plugin implements KeyListener
 			log.debug("Normal behavior");
 		}
 
-		if (chatMessage.getMessage().toLowerCase().equals("jf") || chatMessage.getMessage().toLowerCase().equals("out")){
+		if (chatMessage.getMessage().toLowerCase().contains("-=-=") || chatMessage.getMessage().toLowerCase().contains("---") || chatMessage.getMessage().toLowerCase().contains("===") || chatMessage.getMessage().toLowerCase().equals("jf") || chatMessage.getMessage().toLowerCase().equals("out")){
 			msgIn = true;
 		}
+		if (chatMessage.getMessage().toLowerCase().contains("@")){
+			msgIn = false;
+		}
+
 
 
         if ((chatMessage.getMessage().contains("+") && chatMessage.getMessage().charAt(0) == '+') || msgIn)
