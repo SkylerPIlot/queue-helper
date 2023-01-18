@@ -820,7 +820,7 @@ public class BASPlugin extends Plugin implements KeyListener
 			log.debug("Normal behavior");
 		}
 
-		if (chatMessage.getMessage().toLowerCase().contains("-=-=") || chatMessage.getMessage().toLowerCase().contains("---") || chatMessage.getMessage().toLowerCase().contains("===") || chatMessage.getMessage().toLowerCase().equals("jf") || chatMessage.getMessage().toLowerCase().equals("out")){
+		if (chatMessage.getMessage().toLowerCase().contains("t+") || chatMessage.getMessage().toLowerCase().contains("-=-=") || chatMessage.getMessage().toLowerCase().contains("---") || chatMessage.getMessage().toLowerCase().contains("===") || chatMessage.getMessage().toLowerCase().equals("jf") || chatMessage.getMessage().toLowerCase().equals("out")){
 			msgIn = true;
 		}
 		if (chatMessage.getMessage().toLowerCase().contains("@")){
