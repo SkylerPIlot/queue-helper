@@ -588,7 +588,7 @@ public class BASPlugin extends Plugin implements KeyListener
                                         }
                                         if (user[0].equals("P")) {
                                             //member.setTextColor(6604900);
-											member.setTextColor(6604900);//sets both the same color/removes prem
+											member.setTextColor(6579400);//sets both the same color/removes prem
                                             continue;
                                         }
                                         member.setTextColor(6579400);
@@ -793,7 +793,7 @@ public class BASPlugin extends Plugin implements KeyListener
 
 		try{
 			int numMsg = (int) chatMessage.getMessage().charAt(0);
-			if((48 <= numMsg && numMsg <= 53) && (chatMessage.getMessage().contains("a") || chatMessage.getMessage().contains("c") || chatMessage.getMessage().contains("d") || chatMessage.getMessage().contains("h") || (chatMessage.getMessage().contains("r") && !chatMessage.getMessage().contains("reg"))))
+			if((48 <= numMsg && numMsg <= 53) && (chatMessage.getMessage().contains("out") || chatMessage.getMessage().contains("f") || chatMessage.getMessage().contains("a") || chatMessage.getMessage().contains("*") || chatMessage.getMessage().contains("c") || chatMessage.getMessage().contains("d") || chatMessage.getMessage().contains("h") || (chatMessage.getMessage().contains("r") && !chatMessage.getMessage().contains("reg"))))
 			{
 				if(48 <= ((int) chatMessage.getMessage().charAt(1)) && ((int) chatMessage.getMessage().charAt(1)) <= 57){
 					msgIn = false;
@@ -820,9 +820,13 @@ public class BASPlugin extends Plugin implements KeyListener
 			log.debug("Normal behavior");
 		}
 
-		if (chatMessage.getMessage().toLowerCase().equals("jf") || chatMessage.getMessage().toLowerCase().equals("out")){
+		if (chatMessage.getMessage().toLowerCase().contains("t+") || chatMessage.getMessage().toLowerCase().contains("-=-=") || chatMessage.getMessage().toLowerCase().contains("---") || chatMessage.getMessage().toLowerCase().contains("===") || chatMessage.getMessage().toLowerCase().equals("jf") || chatMessage.getMessage().toLowerCase().equals("out")){
 			msgIn = true;
 		}
+		if (chatMessage.getMessage().toLowerCase().contains("@")){
+			msgIn = false;
+		}
+
 
 
         if ((chatMessage.getMessage().contains("+") && chatMessage.getMessage().charAt(0) == '+') || msgIn)
@@ -833,9 +837,9 @@ public class BASPlugin extends Plugin implements KeyListener
 
 
 			String unhashedMsg = chatMessage.getName() + chatMessage.getMessage() + (((int)(chatMessage.getTimestamp()/10)*10) +close);
-			log.info(unhashedMsg);
+			//log.info(unhashedMsg);
 			int hasedMsg = unhashedMsg.hashCode();
-			log.info(String.valueOf(hasedMsg));
+			//log.info(String.valueOf(hasedMsg));
 			OkHttpClient httpClient = BasHttpClient;
 			HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("disc").build();
 			Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).header("Content-Type", "application/json").header("username",chatMessage.getName().replace(' ', ' ')).header("msg",chatMessage.getMessage()).header("hash",String.valueOf(hasedMsg)).build();
@@ -850,9 +854,9 @@ public class BASPlugin extends Plugin implements KeyListener
 				public void onResponse(Call call, Response response) throws IOException
 				{
 					BufferedReader in = new BufferedReader(new StringReader(response.body().string()));
-					log.info(in.readLine());
-					log.info(in.readLine());
-					log.info(in.readLine());
+					//log.info(in.readLine());
+					//log.info(in.readLine());
+					//#log.info(in.readLine());
 					response.close();
 				}
 			});
