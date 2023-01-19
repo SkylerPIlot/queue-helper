@@ -798,13 +798,11 @@ public class BASPlugin extends Plugin implements KeyListener
 		if (chatMessage.getMessage().toLowerCase().contains("t+") || chatMessage.getMessage().toLowerCase().contains("-=-=") || chatMessage.getMessage().toLowerCase().contains("---") || chatMessage.getMessage().toLowerCase().contains("===") || chatMessage.getMessage().toLowerCase().equals("jf") || chatMessage.getMessage().toLowerCase().equals("out")){
 			msgIn = true;
 		}
-		if (chatMessage.getMessage().toLowerCase().contains("@")){
-			msgIn = false;
-		}
 
 
 
-        if ((chatMessage.getMessage().contains("+") && chatMessage.getMessage().charAt(0) == '+') || msgIn)
+
+        if (((chatMessage.getMessage().contains("+") && chatMessage.getMessage().charAt(0) == '+') || msgIn) && !chatMessage.getMessage().toLowerCase().contains("@"))
 		{
 			msgIn = false;
 
