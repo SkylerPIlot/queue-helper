@@ -1,8 +1,10 @@
 package com.queuehelper;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ObjectArrays;
+
 import com.google.inject.Provides;
+import java.awt.image.BufferedImage;
+import javax.swing.SwingUtilities;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
 import net.runelite.api.widgets.Widget;
@@ -18,9 +20,12 @@ import net.runelite.client.input.KeyListener;
 import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.ui.ClientToolbar;
+import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.Text;
 import okhttp3.*;
-import org.apache.commons.lang3.ArrayUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,41 +42,7 @@ public class BASPlugin extends Plugin implements KeyListener
 {
     private static final Logger log = LoggerFactory.getLogger(BASPlugin.class);
 
-	private String HOST_PATH = "vrqgs27251.execute-api.eu-west-2.amazonaws.com";
-
     private static final String ccName = "Ba Services";
-
-	private String UPDATE_OPTION_A = "";
-
-	private String UPDATE_OPTION_QSPR = "";
-
-	private String UPDATE_OPTION_GNC = "";
-
-	private String UPDATE_OPTION_ATQ = "";
-
-	private String UPDATE_OPTION_PRI = "";
-
-	private String UPDATE_OPTION_NAM = "";
-
-	private String UPDATE_OPTION_FORMI = "";
-
-	private String UPDATE_OPTION_QN = "";
-
-	private String UPDATE_OPTION_D = "";
-
-	private String UPDATE_OPTION_QHN = "";
-
-	private String UPDATE_OPTION_C = "";
-
-	private String UPDATE_OPTION_M = "";
-
-	private String UPDATE_OPTION_R = "";
-
-	private String UPDATE_OPTION_O = "";
-
-	private String UPDATE_OPTION_CN = "";
-
-	private String updateFile = "";
 
     private static final int clanSetupWidgetID = 20;
 
@@ -79,13 +50,11 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private static final ImmutableList<String> BAS_BUY_OPTIONS = ImmutableList.of("Prem 1R Points", "Reg 1R Points", "Prem Hat", "Reg Hat", "Prem Queen Kill", "Reg Queen Kill", "Prem Lvl 5s", "Reg Lvl 5s", "Prem Torso", "Reg Torso");
 
-    private final List<String[]> csvContent = new ArrayList<>();
+    private List<String[]> csvContent = new ArrayList<>();
 
     private final List<String> ccMembersList = new ArrayList<>();
 
     private static final String errorMsg = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("BAS QH: ").append(ChatColorType.HIGHLIGHT).append("Please Paste the API key in the plugin settings and restart the plugin").build();
-
-    private int lastCheckTick;
 
     private int ccCount;
 
@@ -95,9 +64,12 @@ public class BASPlugin extends Plugin implements KeyListener
 
     private boolean isUpdated = true;
 
-	private boolean isStarting = true;
+	private BasQueuePanel basQueuePanel; //TODO create panel class swing xD
+	private NavigationButton navButton;
 
-	private boolean msgIn = false;
+
+
+	private BASHTTPClient httpclient;
 
     @Inject
     private Client client;
@@ -114,117 +86,60 @@ public class BASPlugin extends Plugin implements KeyListener
 	@Inject
 	private OkHttpClient BasHttpClient;
 
-    @Provides
+	@Inject
+	private ClientToolbar clientToolbar;
+
+	public BASPlugin() throws IOException
+	{
+	}
+
+	@Provides
     BASConfig provideConfig(ConfigManager configManager)
     {
         return configManager.getConfig(BASConfig.class);
     }
 
+	private Queue queue;
+
     protected void startUp() throws Exception
     {
-        this.keyManager.registerKeyListener(this);
-        this.isUpdated = true;
-		getupdateStrings();
+		this.queue = Queue.getInstance(config.apikey());
+		this.basQueuePanel = new BasQueuePanel(this);
+//TODO create side panel
+		//resourcePacksHubPanel = injector.getInstance(ResourcePacksHubPanel.class);
+		navButton = queue.getNav();
+		navButton.setPanel(basQueuePanel);
+		clientToolbar.addNavigation(navButton);
+		SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
+
+
     }
 
     protected void shutDown() throws Exception
     {
+		clientToolbar.removeNavigation(navButton);
+
+		httpclient = null;
         this.keyManager.unregisterKeyListener(this);
-        ccUpdate();
+
         this.csvContent.clear();
-		clearupdateStrings();
+
+
     }
 
-	private boolean getupdateStrings(){
 
-        if (isConfigApiEmpty()){
-            return false;
 
-        }
 
-		OkHttpClient httpClient = BasHttpClient;
-		HttpUrl httpUrl = new HttpUrl.Builder()
-			.scheme("https")
-			.host(HOST_PATH)
-			.addPathSegment("Bas_Queuehelper")
-			.addPathSegment("grabfilestrings")
-			.build();
 
-		Request request = new Request.Builder()
-			.header("User-Agent", "RuneLite")
-			.url(httpUrl)
-			.header("Content-Type", "application/json")
-			.header("x-api-key", config.apikey())
-			.build();
 
-		httpClient.newCall(request).enqueue(new Callback()
-		{
-			@Override
-			public void onFailure(Call call, IOException e)
-			{
-				log.warn("Error sending http request1.", e.getMessage());
-			}
 
-			@Override
-			public void onResponse(Call call, Response response) throws IOException
-			{
-				BufferedReader in = new BufferedReader(new StringReader(response.body().string().replace("\n","")));
 
-				in.readLine();
 
-				String[] splitString = in.readLine().split(",");
 
-				UPDATE_OPTION_QSPR = splitString[0].split("\"")[3];
 
-				UPDATE_OPTION_GNC = splitString[1];
 
-				UPDATE_OPTION_ATQ = splitString[2];
 
-				UPDATE_OPTION_PRI = splitString[3];
 
-				UPDATE_OPTION_NAM = splitString[4];
-
-				UPDATE_OPTION_FORMI = splitString[5];
-
-				UPDATE_OPTION_QN = splitString[6];
-
-				UPDATE_OPTION_D = splitString[7];
-
-				UPDATE_OPTION_QHN = splitString[8];
-
-				UPDATE_OPTION_C = splitString[9];
-
-				UPDATE_OPTION_M = splitString[10];
-
-				UPDATE_OPTION_R = splitString[11];
-
-				UPDATE_OPTION_O = splitString[12];
-
-				UPDATE_OPTION_CN = splitString[13];
-
-				updateFile = splitString[14];
-
-				UPDATE_OPTION_A = splitString[15];
-
-				response.close();
-			}
-		});
-
-		if(UPDATE_OPTION_GNC.equals("")){
-		    return false;
-        }// this lets us know if this update was succesfull or not
-		return true;
-	}
-
-	private boolean checkSuccesfulConnection(){
-        if (UPDATE_OPTION_GNC.equals("")){
-            if (getupdateStrings()){
-                return true;//was succesfull in updating after being in a failure/starting state
-            }
-            return false;
-        }
-        return true; // was already succesfully verified
-    }
 
     private boolean isConfigApiEmpty(){
 
@@ -240,48 +155,18 @@ public class BASPlugin extends Plugin implements KeyListener
 
     }
 
-	private void clearupdateStrings(){
-    	UPDATE_OPTION_QSPR = "";
 
-    	UPDATE_OPTION_GNC = "";
-
-    	UPDATE_OPTION_ATQ = "";
-
-    	UPDATE_OPTION_PRI = "";
-
-    	UPDATE_OPTION_NAM = "";
-
-    	UPDATE_OPTION_FORMI = "";
-
-    	UPDATE_OPTION_QN = "";
-
-    	UPDATE_OPTION_D = "";
-
-	    UPDATE_OPTION_QHN = "";
-
-    	UPDATE_OPTION_C = "";
-
-	    UPDATE_OPTION_M = "";
-
-	    UPDATE_OPTION_R = "";
-
-	    UPDATE_OPTION_O = "";
-
-    	UPDATE_OPTION_CN = "";
-
-    	updateFile = "";
-}
 
     @Subscribe
-    public void onGameTick(GameTick event)
-    {
+    public void onGameTick(GameTick event) throws IOException
+	{
         if (!this.isUpdated || !isRank())
             return;
         FriendsChatManager clanMemberManager = this.client.getFriendsChatManager();
         updateCCPanel();
         if (clanMemberManager != null && clanMemberManager.getCount() > 0 && this.ccCount != clanMemberManager.getCount())
         {
-            ccUpdate();
+            //ccUpdate();
             this.ccCount = clanMemberManager.getCount();
         }
         if (this.config.getNextCustomer())
@@ -296,21 +181,21 @@ public class BASPlugin extends Plugin implements KeyListener
     }
 
     @Subscribe
-    public void onFriendsChatMemberJoined(FriendsChatMemberJoined event)
-    {
-        ccUpdate();
+    public void onFriendsChatMemberJoined(FriendsChatMemberJoined event) throws IOException
+	{
+
     }
 
     @Subscribe
     public void onConfigChanged(ConfigChanged event)
     {
-       checkSuccesfulConnection();
+
     }
 
     @Subscribe
-    public void onFriendsChatMemberLeft(FriendsChatMemberLeft event)
-    {
-        ccUpdate();
+    public void onFriendsChatMemberLeft(FriendsChatMemberLeft event) throws IOException
+	{
+
     }
 
     @Subscribe
@@ -380,7 +265,7 @@ public class BASPlugin extends Plugin implements KeyListener
             return;
         if (event.getMenuOption().equals("Get Customer ID"))
         {
-            getCustomerID(targetSanitized);
+            //getCustomerID(targetSanitized);
             return;
         }
         String appendMessage = "";
@@ -388,19 +273,19 @@ public class BASPlugin extends Plugin implements KeyListener
         {
             case "In-Progress":
                 appendMessage = "in progress.";
-                markCustomer(1, targetSanitized);
+               //markCustomer(1, targetSanitized);
                 break;
             case "Mark Done":
                 appendMessage = "done.";
-                markCustomer(2, targetSanitized);
+                //markCustomer(2, targetSanitized);
                 break;
             case "Mark Online":
                 appendMessage = "online.";
-                markCustomer(3, targetSanitized);
+               // markCustomer(3, targetSanitized);
                 break;
             case "Start Cooldown":
                 appendMessage = "start cooldown.";
-                markCustomer(4, targetSanitized);
+               // markCustomer(4, targetSanitized);
                 break;
         }
         String chatMessage = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("Marked " + targetSanitized + " as ").append(ChatColorType.HIGHLIGHT).append(appendMessage).build();
@@ -421,12 +306,10 @@ public class BASPlugin extends Plugin implements KeyListener
         if (isConfigApiEmpty()){
             return;
         }
-        if(!checkSuccesfulConnection()){
-            return;
-        }
+
         OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_GNC, "1").build();
-        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
+        //HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host('HOST_PATH').addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_GNC, "1").build();
+        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url("httpUrl").build();
         httpClient.newCall(request).enqueue(new Callback()
         {
             public void onFailure(Call call, IOException e)
@@ -455,9 +338,7 @@ public class BASPlugin extends Plugin implements KeyListener
         if (isConfigApiEmpty()){
             return;
         }
-        if(!checkSuccesfulConnection()){
-            return;
-        }
+
         String queueName = this.config.queueName().equals("") ? this.client.getLocalPlayer().getName() : this.config.queueName();
         String formItem = "";
         String priority = "Regular";
@@ -499,8 +380,8 @@ public class BASPlugin extends Plugin implements KeyListener
                 formItem = "One Round - Points";
                 break;
         }
-        final HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_ATQ, "1").addQueryParameter(UPDATE_OPTION_PRI, priority).addQueryParameter(UPDATE_OPTION_NAM, name.replace(' ', ' ')).addQueryParameter(UPDATE_OPTION_FORMI, formItem).addQueryParameter(UPDATE_OPTION_QN, queueName).build();
-        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
+        //final HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host("HOST_PATH").addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment('updateFile').addQueryParameter('UPDATE_OPTION_ATQ', "1").addQueryParameter('UPDATE_OPTION_PRI', priority).addQueryParameter(UPDATE_OPTION_NAM, name.replace(' ', ' ')).addQueryParameter(UPDATE_OPTION_FORMI, formItem).addQueryParameter(UPDATE_OPTION_QN, queueName).build();
+        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url("httpUrl").build();
         BasHttpClient.newCall(request).enqueue(new Callback()
         {
             public void onFailure(Call call, IOException e)
@@ -517,36 +398,14 @@ public class BASPlugin extends Plugin implements KeyListener
                         .type(ChatMessageType.CONSOLE)
                         .runeLiteFormattedMessage(chatMessage)
                         .build());
-                BASPlugin.this.getCustomerID(name);
+                //BASPlugin.this.getCustomerID(name);
             }
         });
     }
 
-    private void insertMenuEntry(MenuEntry newEntry, MenuEntry[] entries, boolean swap)
-    {
-        MenuEntry[] newMenu = (MenuEntry[]) ObjectArrays.concat((Object[]) entries, newEntry);
-        int menuEntryCount = newMenu.length;
-        if (swap)
-            ArrayUtils.swap((Object[]) newMenu, menuEntryCount - 1, menuEntryCount - 2);
-        this.client.setMenuEntries(newMenu);
-    }
 
-    private void ccUpdate()
-    {//on startup this spams like 8 calls and idk how to fix
-    	if(isStarting)
-			{
-				isUpdated = false;
-				isStarting = false;
-				readCSV();
-				updateQueue();
 
-			}
-        if (this.lastCheckTick == this.client.getTickCount() || !isRank() || !this.isUpdated)
-            return;
-        readCSV();
-        updateQueue();
-        this.lastCheckTick = this.client.getTickCount();
-    }
+
 
     private void updateCCPanel()
     {
@@ -602,40 +461,7 @@ public class BASPlugin extends Plugin implements KeyListener
         }
     }
 
-    private void readCSV()
-    {
-        if (isConfigApiEmpty()){
-            return;
-        }
-        if(!checkSuccesfulConnection()){
-            return;
-        }
-        OkHttpClient httpClient = BasHttpClient;//often failing method(slow server) opting to reduce requests
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_QSPR, "1").build();
-        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
-        httpClient.newCall(request).enqueue(new Callback()
-        {
-            public void onFailure(Call call, IOException e)
-            {
-                BASPlugin.log.warn("Error sending http request2." + e.getMessage());
-            }
 
-            public void onResponse(Call call, Response response) throws IOException
-            {
-                BufferedReader in = new BufferedReader(new StringReader(response.body().string()));
-                int lineNum = 0;
-                BASPlugin.this.csvContent.clear();
-                String s;
-                while ((s = in.readLine()) != null)
-                {
-                    String[] splitString = s.split(",");
-                    if (splitString.length > 5)
-                        BASPlugin.this.csvContent.add(new String[] {splitString[2], splitString[2].equals("R") ? splitString[4] : splitString[3], splitString[0]});
-                }
-                response.close();
-            }
-        });
-    }
 
     private void updateQueue()
     {
@@ -659,13 +485,11 @@ public class BASPlugin extends Plugin implements KeyListener
         if (isConfigApiEmpty()){
             return;
         }
-        if(!checkSuccesfulConnection()){
-            return;
-        }
+
         OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_D, csv.toString()).addQueryParameter(UPDATE_OPTION_QHN, Text.sanitize(this.client.getLocalPlayer().getName())).build();
-        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
-        log.debug("sending: " + httpUrl.toString());
+        //HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_D, csv.toString()).addQueryParameter(UPDATE_OPTION_QHN, Text.sanitize(this.client.getLocalPlayer().getName())).build();
+        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url("httpUrl").build();
+
         httpClient.newCall(request).enqueue(new Callback()
         {
             public void onFailure(Call call, IOException e)
@@ -682,158 +506,13 @@ public class BASPlugin extends Plugin implements KeyListener
         });
     }
 
-    private void markCustomer(int option, String name)
-    {
-        if (isConfigApiEmpty()){
-            return;
-        }
-        if(!checkSuccesfulConnection()){
-            return;
-        }
-        OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_O, option + "").addQueryParameter(UPDATE_OPTION_CN, name).build();
-        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
-        log.debug("marking: " + httpUrl.toString());
-        httpClient.newCall(request).enqueue(new Callback()
-        {
-            public void onFailure(Call call, IOException e)
-            {
-                BASPlugin.log.warn("Error sending http request4." + e.getMessage());
-            }
 
-            public void onResponse(Call call, Response response) throws IOException
-            {
-                response.close();
-            }
-        });
-    }
-
-    private void getCustomerID(final String name)
-    {
-        if (isConfigApiEmpty()){
-            return;
-        }
-        if(!checkSuccesfulConnection()){
-            return;
-        }
-        OkHttpClient httpClient = BasHttpClient;
-        HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("bas").addPathSegment(updateFile).addQueryParameter(UPDATE_OPTION_A, name.replace(' ', ' ')).build();
-        Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).build();
-        httpClient.newCall(request).enqueue(new Callback()
-        {
-            public void onFailure(Call call, IOException e)
-            {
-                String chatMessage = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("Error getting ID for " + name).build();
-                BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
-                        .type(ChatMessageType.CONSOLE)
-                        .runeLiteFormattedMessage(chatMessage)
-                        .build());
-            }
-
-            public void onResponse(Call call, Response response) throws IOException
-            {
-				String test = response.body().string().replace("\n","");
-                String chatMessage = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("ID # for " + name + ": ").append(ChatColorType.HIGHLIGHT).append(test).build();
-                BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
-                        .type(ChatMessageType.CONSOLE)
-                        .runeLiteFormattedMessage(chatMessage)
-                        .build());
-                response.close();
-            }
-        });
-    }
-
-    private FriendsChatRank getRank(String playerName)
-    {
-        FriendsChatManager friendsChatManager = this.client.getFriendsChatManager();
-        if (friendsChatManager == null)
-            return FriendsChatRank.UNRANKED;
-        FriendsChatMember friendsChatMember = (FriendsChatMember) friendsChatManager.findByName(playerName);
-        return (friendsChatMember != null) ? friendsChatMember.getRank() : FriendsChatRank.UNRANKED;
-    }
 
 
     @Subscribe
     public void onChatMessage(ChatMessage chatMessage)
     {
-        if (!isRank() || !this.isUpdated || chatMessage.getType() != ChatMessageType.FRIENDSCHAT)
-            return;
-        FriendsChatRank rank = getRank(chatMessage.getName());
-		if (isConfigApiEmpty()){
-			return;
-		}
-		if(!checkSuccesfulConnection()){
-			return;
-		}
 
-		try{
-			int numMsg = (int) chatMessage.getMessage().charAt(0);
-			if((48 <= numMsg && numMsg <= 53) && (chatMessage.getMessage().contains("out") || chatMessage.getMessage().contains("f") || chatMessage.getMessage().contains("a") || chatMessage.getMessage().contains("*") || chatMessage.getMessage().contains("c") || chatMessage.getMessage().contains("d") || chatMessage.getMessage().contains("h") || (chatMessage.getMessage().contains("r") && !chatMessage.getMessage().contains("reg"))))
-			{
-				if(48 <= ((int) chatMessage.getMessage().charAt(1)) && ((int) chatMessage.getMessage().charAt(1)) <= 57){
-					msgIn = false;
-					}
-				else{
-					msgIn = true;
-				}
-
-			}
-		}
-		catch (NumberFormatException ex){
-			log.debug("Normal behavior");
-		}
-
-
-		try{
-			int numMsg = Integer.parseInt(chatMessage.getMessage());
-			if(0 <= numMsg  && numMsg <= 5)
-			{
-				msgIn = true;
-			}
-		}
-		catch (NumberFormatException ex){
-			log.debug("Normal behavior");
-		}
-
-		if (chatMessage.getMessage().toLowerCase().contains("t+") || chatMessage.getMessage().toLowerCase().contains("-=-=") || chatMessage.getMessage().toLowerCase().contains("---") || chatMessage.getMessage().toLowerCase().contains("===") || chatMessage.getMessage().toLowerCase().equals("jf") || chatMessage.getMessage().toLowerCase().equals("out")){
-			msgIn = true;
-		}
-
-
-
-
-        if (((chatMessage.getMessage().contains("+") && chatMessage.getMessage().charAt(0) == '+') || msgIn) && !chatMessage.getMessage().toLowerCase().contains("@"))
-		{
-			msgIn = false;
-
-
-
-
-			String unhashedMsg = chatMessage.getName() + chatMessage.getMessage() + (((int)(chatMessage.getTimestamp()/10)*10));
-			//log.info(unhashedMsg);
-			int hasedMsg = unhashedMsg.hashCode();
-			//log.info(String.valueOf(hasedMsg));
-			OkHttpClient httpClient = BasHttpClient;
-			HttpUrl httpUrl = (new HttpUrl.Builder()).scheme("https").host(HOST_PATH).addPathSegment("Bas_Queuehelper").addPathSegment("disc").build();
-			Request request = (new Request.Builder()).header("User-Agent", "RuneLite").header("x-api-key", config.apikey()).url(httpUrl).header("Content-Type", "application/json").header("username",chatMessage.getName().replace(' ', ' ')).header("msg",chatMessage.getMessage()).header("hash",String.valueOf(hasedMsg)).build();
-
-			httpClient.newCall(request).enqueue(new Callback()
-			{
-				public void onFailure(Call call, IOException e)
-				{
-//                BASPlugin.log.warn("Error sending http request5." + e.getMessage());
-				}
-
-				public void onResponse(Call call, Response response) throws IOException
-				{
-					BufferedReader in = new BufferedReader(new StringReader(response.body().string()));
-					//log.info(in.readLine());
-					//log.info(in.readLine());
-					//#log.info(in.readLine());
-					response.close();
-				}
-			});
-		}
     }
 
     public void keyTyped(KeyEvent e)

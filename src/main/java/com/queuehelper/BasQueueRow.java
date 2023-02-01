@@ -1,0 +1,348 @@
+package com.queuehelper;
+
+
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.util.EnumSet;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.border.EmptyBorder;
+import lombok.AccessLevel;
+import lombok.Getter;
+import net.runelite.client.ui.FontManager;
+import net.runelite.client.util.ImageUtil;
+import net.runelite.http.api.worlds.World;
+import net.runelite.http.api.worlds.WorldRegion;
+import net.runelite.http.api.worlds.WorldType;
+
+class BasQueueRow extends JPanel
+{
+
+
+
+	private final JMenuItem addMenuOption = new JMenuItem();
+
+	private JLabel worldField;
+	private JLabel playerCountField;
+	private JLabel activityField;
+	private JLabel pingField;
+
+	private JLabel nameField;
+	private JLabel idField;
+	private JLabel itemField;
+	private JLabel notesField;
+
+	private Customer customer;
+
+	private int ping;
+
+	private Color lastBackground;
+
+	private JLabel item;
+
+
+	BasQueueRow(Customer Customer)
+	{
+
+		this.customer = Customer;
+
+		setLayout(new BorderLayout());
+		setBorder(new EmptyBorder(2, 0, 2, 0));
+
+		addMouseListener(new MouseAdapter()
+		{
+			@Override
+			public void mouseClicked(MouseEvent mouseEvent)
+			{
+				if (mouseEvent.getClickCount() == 2)
+				{
+
+				}
+			}
+
+			@Override
+			public void mousePressed(MouseEvent mouseEvent)
+			{
+				if (mouseEvent.getClickCount() == 2)
+				{
+					setBackground(getBackground().brighter());
+				}
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent mouseEvent)
+			{
+				if (mouseEvent.getClickCount() == 2)
+				{
+					setBackground(getBackground().darker());
+				}
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent mouseEvent)
+			{
+				BasQueueRow.this.lastBackground = getBackground();
+				setBackground(getBackground().brighter());
+			}
+
+			@Override
+			public void mouseExited(MouseEvent mouseEvent)
+			{
+				setBackground(lastBackground);
+			}
+		});
+
+
+		final JPopupMenu popupMenu = new JPopupMenu();
+		popupMenu.setBorder(new EmptyBorder(5, 5, 5, 5));
+		popupMenu.add(addMenuOption);
+
+		setComponentPopupMenu(popupMenu);
+
+		JPanel leftSide = new JPanel(new BorderLayout());
+		JPanel rightSide = new JPanel(new BorderLayout());
+		leftSide.setOpaque(false);
+		rightSide.setOpaque(false);
+
+		JPanel nameField = buildNameField(Customer);
+		nameField.setPreferredSize(new Dimension(70, 10));
+		nameField.setOpaque(false);
+
+		JPanel idField = buildidField(Customer);
+		idField.setPreferredSize(new Dimension(30, 10));
+		idField.setOpaque(false);
+
+		JPanel itemField = builditemField(Customer);
+		itemField.setPreferredSize(new Dimension(30, 30));
+		itemField.setOpaque(false);
+
+		JPanel notesField = buildNotesField(Customer);
+		notesField.setPreferredSize(new Dimension(40, 10));
+		notesField.setOpaque(false);
+
+		recolour(Customer);
+
+		leftSide.add(idField, BorderLayout.WEST);
+		leftSide.add(nameField, BorderLayout.CENTER);
+		rightSide.add(itemField, BorderLayout.WEST);
+		rightSide.add(notesField, BorderLayout.CENTER);
+		add(leftSide, BorderLayout.WEST);
+		add(rightSide, BorderLayout.CENTER);
+
+
+	}
+
+
+	void setFavoriteMenu(boolean favorite)
+	{
+		String favoriteAction = favorite ?
+			"Remove " + 1 + " from favorites" :
+			"Add " + 1 + " to favorites";
+
+		addMenuOption.setText(favoriteAction);
+
+		for (ActionListener listener : addMenuOption.getActionListeners())
+		{
+			addMenuOption.removeActionListener(listener);
+		}
+
+		addMenuOption.addActionListener(e ->
+		{
+			//onFavorite.accept(world, !favorite);
+		});
+	}
+
+
+	private static String playerCountString(int playerCount)
+	{
+		return playerCount < 0 ? "OFF" : Integer.toString(playerCount);
+	}
+
+
+
+
+
+	public void recolour(Customer customer)
+	{
+		String status = customer.getStatus();
+		Color curColor = Color.black;
+		if(this.item == null)
+		{
+			itemField.setForeground(curColor);
+		}
+		notesField.setForeground(curColor);
+		nameField.setForeground(curColor);
+		idField.setForeground(curColor);
+		switch(status)
+		{
+			case "Online":
+				if(!customer.getNotes().toLowerCase().contains("cd")&&!customer.getNotes().toLowerCase().contains("cooldown"))
+				{
+					curColor = new Color(237,237,237);
+					this.setBackground(curColor);
+
+					break;
+				}
+				curColor = new Color(99,151,255);
+				this.setBackground(curColor);
+				break;
+
+			case "In Progress":
+				curColor = new Color(241,235,118);;
+				this.setBackground(curColor);
+				break;
+
+			case "Done":
+				curColor = new Color(129,129,129);;
+				this.setBackground(curColor);
+				break;
+
+			case "":
+				if(!customer.getNotes().toLowerCase().contains("cd")&&!customer.getNotes().toLowerCase().contains("cooldown"))
+				{
+					curColor = Color.red;
+					if(this.item == null)
+					{
+						itemField.setForeground(curColor);
+					}
+					notesField.setForeground(curColor);
+					nameField.setForeground(curColor);
+					idField.setForeground(curColor);
+					break;
+				}
+				curColor = new Color(99,151,255);
+				this.setBackground(curColor);
+				break;
+
+			default:
+				curColor = Color.gray;
+				this.setBackground(curColor);
+
+				break;
+		}
+	}
+
+	/**
+	 * Builds the players list field (containing the amount of players logged in that world).
+	 */
+	private JPanel builditemField(Customer cust)
+	{
+		String item = cust.getItem();
+		JPanel column = new JPanel(new BorderLayout());
+		switch(item){
+
+			case "Torso":
+				column = new JPanel(new BorderLayout());
+				itemField = new JLabel(new ImageIcon(ImageUtil.loadImageResource(getClass(), "/torso.png")));
+				column.add(itemField);
+				return column;
+
+			default:
+				column = new JPanel(new BorderLayout());
+				column.setBorder(new EmptyBorder(0, 5, 0, 5));
+
+				itemField = new JLabel(cust.getItem());
+				itemField.setFont(FontManager.getRunescapeSmallFont());
+
+				column.add(itemField, BorderLayout.WEST);
+
+				return column;
+		}
+	}
+
+
+
+	private JPanel buildidField(Customer cust)
+	{
+		JPanel column = new JPanel(new BorderLayout());
+		column.setBorder(new EmptyBorder(0, 0, 0, 5));
+
+		idField = new JLabel(cust.getID());
+		idField.setFont(FontManager.getRunescapeSmallFont());
+
+		idField.setToolTipText(cust.getID());
+		// Pass up events - https://stackoverflow.com/a/14932443
+		idField.addMouseListener(new MouseAdapter()
+		{
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				dispatchEvent(e);
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e)
+			{
+				dispatchEvent(e);
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e)
+			{
+				dispatchEvent(e);
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e)
+			{
+				dispatchEvent(e);
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e)
+			{
+				dispatchEvent(e);
+			}
+		});
+
+		column.add(idField, BorderLayout.EAST);
+
+
+		return column;
+	}
+
+	/**
+	 * Builds the activity list field (containing that world's activity/theme).
+	 */
+	private JPanel buildNotesField(Customer cust)
+	{
+		JPanel column = new JPanel(new BorderLayout());
+		column.setBorder(new EmptyBorder(0, 5, 0, 5));
+
+		String activity = cust.getNotes();
+		notesField = new JLabel(cust.getNotes());
+		notesField.setFont(FontManager.getRunescapeSmallFont());
+
+
+		column.add(notesField, BorderLayout.WEST);
+
+		return column;
+	}
+
+
+	private JPanel buildNameField(Customer cust)
+	{
+		JPanel column = new JPanel(new BorderLayout());
+		column.setBorder(new EmptyBorder(0, 5, 0, 5));
+
+		nameField = new JLabel(cust.getName());
+		nameField.setFont(FontManager.getRunescapeSmallFont());
+
+		column.add(nameField, BorderLayout.CENTER);
+
+		return column;
+	}
+
+
+}
