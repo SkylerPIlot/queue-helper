@@ -38,7 +38,7 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 	private String UPDATE_OPTION_NAM;
 	private String UPDATE_OPTION_FORMI;
 	private String UPDATE_OPTION_QN;
-	private String UPDATE_OPTION_D;
+	private String csvList;
 	private String UPDATE_OPTION_QHN;
 	private String UPDATE_OPTION_C;
 	private String UPDATE_OPTION_M;
@@ -88,7 +88,7 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 
 		UPDATE_OPTION_QN = "";
 
-		UPDATE_OPTION_D = "";
+		csvList = "";
 
 		UPDATE_OPTION_QHN = "";
 
@@ -115,7 +115,7 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 		this.UPDATE_OPTION_NAM = paths[4];
 		this.UPDATE_OPTION_FORMI = paths[5];
 		this.UPDATE_OPTION_QN = paths[6];
-		this.UPDATE_OPTION_D = paths[7];
+		this.csvList = paths[7];
 		this.UPDATE_OPTION_QHN = paths[8];
 		this.UPDATE_OPTION_C = paths[9];
 		this.UPDATE_OPTION_M = paths[10];
@@ -244,7 +244,7 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 		NavigationButton navButton = NavigationButton.builder()
 			.tooltip("BAS queue + options")
 			.icon(icon)
-			.priority(10)
+			.priority(2)
 			//.panel(BasQueuePanel)
 			.build();
 		return navButton;
@@ -257,7 +257,7 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 		HttpUrl url = apiBase.newBuilder()
 			.addPathSegment("bas")
 			.addPathSegment(basephp)
-			.addQueryParameter(UPDATE_OPTION_D, urlList.toString())
+			.addQueryParameter(csvList, urlList.toString())
 			.addQueryParameter(UPDATE_OPTION_QHN, Text.sanitize(name))
 			.build();
 

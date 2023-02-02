@@ -15,8 +15,6 @@ import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
-import net.runelite.client.input.KeyListener;
-import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -28,11 +26,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 @PluginDescriptor(name = "BAS Queue Helper", description = "BAS Customer CC Info", tags = {"minigame"})
-public class BASPlugin extends Plugin implements ActionListener, KeyListener
+public class BASPlugin extends Plugin implements ActionListener
 {
     private static final Logger log = LoggerFactory.getLogger(BASPlugin.class);
 
@@ -54,9 +50,6 @@ public class BASPlugin extends Plugin implements ActionListener, KeyListener
 
     @Inject
     private BASConfig config;
-
-    @Inject
-    private KeyManager keyManager;
 
 	@Inject
 	private OkHttpClient BasHttpClient;
@@ -96,14 +89,11 @@ public class BASPlugin extends Plugin implements ActionListener, KeyListener
 		clientToolbar.removeNavigation(navButton);
 		this.queue = null;
 		httpclient = null;
-        this.keyManager.unregisterKeyListener(this);
-
-
 
     }
 
 
-
+	//checks on startup of plugin and throws an error
     private boolean isConfigApiEmpty(){
 
         if(config.apikey().equals("Paste your key here") || config.apikey().equals("")){
@@ -129,7 +119,6 @@ public class BASPlugin extends Plugin implements ActionListener, KeyListener
     public void onConfigChanged(ConfigChanged event)
     {
 
-		SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
     }
 
     @Subscribe
@@ -139,7 +128,7 @@ public class BASPlugin extends Plugin implements ActionListener, KeyListener
     }
 
 
-
+	//used in sending discord webhook messages
     private boolean isRank()
     {
         FriendsChatManager clanMemberManager = this.client.getFriendsChatManager();
@@ -218,7 +207,7 @@ public class BASPlugin extends Plugin implements ActionListener, KeyListener
         });
     }
 
-
+	//builds a stringbuilder that is then passed to the Implementation of BASHTTPClient to call the backend
     public void updateQueue() throws IOException
 	{
         FriendsChatManager clanMemberManager = this.client.getFriendsChatManager();
@@ -258,17 +247,6 @@ public class BASPlugin extends Plugin implements ActionListener, KeyListener
 
     }
 
-    public void keyTyped(KeyEvent e)
-    {
-    }
-
-    public void keyPressed(KeyEvent e)
-    {
-    }
-
-    public void keyReleased(KeyEvent e)
-    {
-    }
 
 	@Override
 	public void actionPerformed(ActionEvent e)
@@ -276,7 +254,7 @@ public class BASPlugin extends Plugin implements ActionListener, KeyListener
 		//required, didn't feel like using instead used specific functions
 	}
 
-
+	//used in BasQueueRow to run the "Next" button
 	public void getNext(){
     	Customer next = queue.getNext();
 		String chatMessage = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("Next customer in line: ").append(ChatColorType.HIGHLIGHT).append(next.getName() + " " + next.getItem() + " " + next.getNotes()).build();
@@ -285,7 +263,7 @@ public class BASPlugin extends Plugin implements ActionListener, KeyListener
 			.runeLiteFormattedMessage(chatMessage)
 			.build());
 	}
-
+	//used in BasQueueRow to run the "Refresh" button
 	public void refreshQueue()
 	{
 		try
@@ -299,10 +277,11 @@ public class BASPlugin extends Plugin implements ActionListener, KeyListener
 
 		SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
 	}
-
+	//used in BasQueueRow to run the right click options
 	public void markCustomer(int option, Customer cust)
 	{
-		if(option != 0)
+		int UNSUPORRTED = 0;
+		if(option != UNSUPORRTED)
 		{
 			try
 			{

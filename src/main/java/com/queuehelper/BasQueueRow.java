@@ -8,11 +8,6 @@ import java.awt.Dimension;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.util.EnumSet;
-import java.util.Locale;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -20,43 +15,27 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
-import lombok.AccessLevel;
-import lombok.Getter;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.util.ImageUtil;
-import net.runelite.http.api.worlds.World;
-import net.runelite.http.api.worlds.WorldRegion;
-import net.runelite.http.api.worlds.WorldType;
 
 class BasQueueRow extends JPanel
 {
-
-
-
 	private final JMenuItem addMenuOption = new JMenuItem();
-
-	private JLabel worldField;
-	private JLabel playerCountField;
-	private JLabel activityField;
-	private JLabel pingField;
 
 	private boolean otherimg;
 
 	private JLabel nameField;
 	private JLabel idField;
 	private JLabel itemField;
-	//private JLabel notesField;
 	private JTextArea notesField;
 
 	public Customer customer;
 
-	private int ping;
-
 	private Color lastBackground;
 
-	private JLabel item;
-
 	private BASPlugin plugin;
+
+	private JLabel item;
 
 
 	BasQueueRow(Customer Customer, BASPlugin Plugin)
@@ -116,30 +95,43 @@ class BasQueueRow extends JPanel
 		popupMenu.setBorder(new EmptyBorder(5, 5, 5, 5));
 		String menuText;
 		int option;
+		String tooltipHover = "";
 
 		if(customer.getStatus().equals("")){
 			menuText = "Mark " + customer.getName()+ " online(doesn't work on names with a space)";
 			option = 3;//TODO fix for spaces
+			tooltipHover = "Offline";
 		}
 		else if(customer.getNotes().toLowerCase().contains("cooldown")){
 			menuText = "End Cooldown for: " + customer.getName()+ "(Currently unavailable)";
 			option = 0;
+			tooltipHover = "Cooldown";
 		}
-		else if(customer.getStatus().equals("In Progress") && customer.getItem().equals("Level 5 Roles") && customer.getNotes().contains("d started") ){
+		else if(customer.getStatus().equals("In Progress") && customer.getItem().equals("Level 5 Roles") && (customer.getNotes().contains("d started") || customer.getNotes().contains("2/3"))){
 			menuText = "Mark " + customer.getName()+ " done(doesn't work on names with a space)";
 			option = 2;
+			tooltipHover = "In Progress last session lvl5s";
 		}
 		else if(customer.getStatus().equals("In Progress") && customer.getItem().equals("Level 5 Roles")){
 			menuText = "Start Cooldown for: " + customer.getName();
 			option = 4;
+			tooltipHover = "In Progress lvl5s";
 		}
 		else if(customer.getStatus().equals("In Progress")){
 			menuText = "Mark " + customer.getName()+ " done(doesn't work on names with a space)";
 			option = 2;
+			tooltipHover = "In Progress";
+		}
+		else if(customer.getStatus().equals("Done"))
+		{
+			menuText = "Mark " + customer.getName()+ " in progress(doesn't work on names with a space)";
+			option = 1;
+			tooltipHover = "Done";
 		}
 		else{
 			menuText = "Mark " + customer.getName()+ " in progress(doesn't work on names with a space)";
 			option = 1;
+			tooltipHover = "Online";
 		}
 
 		addMenuOption.setText(menuText);
@@ -186,38 +178,9 @@ class BasQueueRow extends JPanel
 		rightSide.add(notesField, BorderLayout.CENTER);
 		add(leftSide, BorderLayout.WEST);
 		add(rightSide, BorderLayout.CENTER);
-
+		this.setToolTipText(tooltipHover);
 
 	}
-
-
-	void setFavoriteMenu(boolean favorite)
-	{
-		String favoriteAction = favorite ?
-			"Remove " + 1 + " from favorites" :
-			"Add " + 1 + " to favorites";
-
-		addMenuOption.setText(favoriteAction);
-
-		for (ActionListener listener : addMenuOption.getActionListeners())
-		{
-			addMenuOption.removeActionListener(listener);
-		}
-
-		addMenuOption.addActionListener(e ->
-		{
-			//onFavorite.accept(world, !favorite);
-		});
-	}
-
-
-	private static String playerCountString(int playerCount)
-	{
-		return playerCount < 0 ? "OFF" : Integer.toString(playerCount);
-	}
-
-
-
 
 
 	public void recolour(Customer customer)

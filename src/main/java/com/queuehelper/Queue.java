@@ -2,15 +2,12 @@ package com.queuehelper;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.SwingUtilities;
-import lombok.SneakyThrows;
 import net.runelite.client.ui.NavigationButton;
 
 public class Queue
@@ -26,7 +23,7 @@ public class Queue
 
 	private List<String[]> OldQueue; //Old csv data used, used in comparison in our implemented HTTPclient interface
 
-	private QueueHelperHTTPClient httpClient; //TODO change this to an interface and create the queue object via a specific interface
+	private QueueHelperHTTPClient httpClient;
 
 	Timer timer;
 
@@ -52,7 +49,7 @@ public class Queue
 				updateQueueTask(ShouldUpdate());
 			}
 		};
-		timer.scheduleAtFixedRate(this.updateQueue,new Date(),120000);
+		timer.scheduleAtFixedRate(this.updateQueue,new Date(),120000);//Schedules a task every 2minutes to both refresh queue object + upload the cc data -> backend
 	}
 
 	public static Queue getInstance(String apikey, BasQueuePanel BasPanel, BASPlugin basPlugin) throws IOException //Singleton queue creation should only need one queue per plugin
@@ -67,9 +64,11 @@ public class Queue
 		}
 		return Queue.queue;
 	}
+
 	public boolean ShouldUpdate(){
 		return this.shouldUpdateQueue;
 	}
+
 	public void ShouldUpdate(boolean ShouldUpdateQueue){
 		this.shouldUpdateQueue = ShouldUpdateQueue;
 	}
@@ -89,24 +88,9 @@ public class Queue
 		}
 	}
 
-	public String getIDfromName(String name)
-	{
-		return this.CurrentQueue.get(name).getID();
-	}
-
-	public String getPriorityfromName(String name)
-	{
-		return this.CurrentQueue.get(name).getPriority();
-	}
-
-	public boolean doesCustomerExist(String name)
-	{
-		return this.CurrentQueue.containsKey(name);
-	}
-
 	public NavigationButton getNav()
 	{
-		return httpClient.getNavButton();
+		return httpClient.getNavButton(); //return the navigation button from the httpclient implementation allows for alternative nav buttons
 	}
 
 	public LinkedHashMap<String, Customer> getQueue()
@@ -126,7 +110,7 @@ public class Queue
 			if (cust.getStatus().equals("Online") && cust.getPriority().equals("R") && first)
 			{
 				first = false;
-				tempNext = cust;
+				tempNext = cust;//sets the first regular customer to the returned name if no premiums exist
 			}
 
 
@@ -163,6 +147,7 @@ public class Queue
 			this.shouldUpdateQueue = false;
 		}
 	}
+
 	public void updateQueuebackend(StringBuilder urlList, String name) throws IOException
 	{
 		httpClient.updateQueuebackend(urlList,name);

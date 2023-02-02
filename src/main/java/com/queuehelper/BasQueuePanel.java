@@ -16,8 +16,6 @@ import net.runelite.client.ui.components.materialtabs.MaterialTabGroup;
 
 public class BasQueuePanel extends PluginPanel
 {
-
-
 	private BASPlugin plugin;
 
 	private final JPanel onlistContainer;
@@ -34,14 +32,10 @@ public class BasQueuePanel extends PluginPanel
 
 	private final MaterialTabGroup tabGroup = new MaterialTabGroup(display);
 
-
-
-
 	BasQueuePanel(BASPlugin plugin, BASConfig Config)
 	{
 		this.plugin = plugin;//not sure why needed but fixes scrollbar
 		this.config = Config;
-
 
 		this.rows = new ArrayList<>();
 		this.onlistContainer = new JPanel();
@@ -50,13 +44,8 @@ public class BasQueuePanel extends PluginPanel
 		this.setBorder(null);
 		this.setLayout(new DynamicGridLayout(0, 1));
 
-
 		this.onlistContainer.setLayout(new GridLayout(0, 1));
 		this.offlistContainer.setLayout(new GridLayout(0, 1));
-
-
-
-
 
 		setLayout(new BorderLayout());
 		setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -72,18 +61,6 @@ public class BasQueuePanel extends PluginPanel
 		add(tabGroup, BorderLayout.NORTH);
 		add(display, BorderLayout.CENTER);
 
-
-
-
-
-
-	}
-
-	void updateList()
-	{
-
-
-		//TODO update the listContainter JPanel
 	}
 
 	void populate(LinkedHashMap<String, Customer> queue)
@@ -108,13 +85,14 @@ public class BasQueuePanel extends PluginPanel
 		}
 		onlistContainer.add(addNextButton("Next"));
 		onlistContainer.add(addRefreshButton("Refresh"));
+		//onlistContainer.add(AddCustomerPanel());
 		offlistContainer.add(addNextButton("Next"));
 		offlistContainer.add(addRefreshButton("Refresh"));
-		this.updateList();
+		//offlistContainer.add(AddCustomerPanel());
 	}
 
 
-	private JButton addRefreshButton(String label) {
+	private JPanel addRefreshButton(String label) {
 		final JPanel container = new JPanel();
 		container.setLayout(new BorderLayout());
 
@@ -130,9 +108,8 @@ public class BasQueuePanel extends PluginPanel
 		});
 
 		container.add(resetButton, BorderLayout.CENTER);
-		//add(container, BorderLayout.NORTH);
 
-		return resetButton;
+		return container;
 	}
 
 	private JPanel addNextButton(String label) {
@@ -145,7 +122,6 @@ public class BasQueuePanel extends PluginPanel
 		nextButton.setBorder(new EmptyBorder(5, 7, 5, 7));
 
 		nextButton.addActionListener(e->this.plugin.getNext());
-
 
 		container.add(nextButton, BorderLayout.CENTER);
 
