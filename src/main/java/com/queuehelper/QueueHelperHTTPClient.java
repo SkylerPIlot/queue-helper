@@ -25,4 +25,6 @@ public interface QueueHelperHTTPClient
 
 	public NavigationButton getNavButton();
 
+	public boolean updateQueuebackend(StringBuilder urlList, String name) throws IOException;
+
 }

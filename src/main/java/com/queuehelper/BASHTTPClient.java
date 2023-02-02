@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.ImageUtil;
+import net.runelite.client.util.Text;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -171,13 +172,12 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 	@Override
 	public boolean markCustomer(int option, String name) throws IOException
 	{
-
 		OkHttpClient client = Basclient;
 		HttpUrl url = apiBase.newBuilder()
 			.addPathSegment("bas")
 			.addPathSegment(basephp)
 			.addQueryParameter(OptionQuery, option + "")
-			.addQueryParameter(CustomerNameQuery, name)
+			.addQueryParameter(CustomerNameQuery, Text.removeTags(Text.sanitize(name)).replace(' ', ' '))
 			.build();
 
 		Request request = new Request.Builder()
@@ -250,6 +250,29 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 		return navButton;
 	}
 
+
+	public boolean updateQueuebackend(StringBuilder urlList, String name) throws IOException
+	{
+		OkHttpClient client = Basclient;
+		HttpUrl url = apiBase.newBuilder()
+			.addPathSegment("bas")
+			.addPathSegment(basephp)
+			.addQueryParameter(UPDATE_OPTION_D, urlList.toString())
+			.addQueryParameter(UPDATE_OPTION_QHN, Text.sanitize(name))
+			.build();
+
+		Request request = new Request.Builder()
+			.header("User-Agent", "RuneLite")
+			.url(url)
+			.header("Content-Type", "application/json")
+			.header("x-api-key", this.apikey)
+			.build();
+
+		try (Response response = client.newCall(request).execute())
+		{
+			return response.isSuccessful();
+		}
+	}
 
 
 

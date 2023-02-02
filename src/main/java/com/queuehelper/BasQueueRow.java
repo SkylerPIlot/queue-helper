@@ -10,6 +10,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.EnumSet;
+import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javax.swing.ImageIcon;
@@ -17,6 +18,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -38,12 +40,15 @@ class BasQueueRow extends JPanel
 	private JLabel activityField;
 	private JLabel pingField;
 
+	private boolean otherimg;
+
 	private JLabel nameField;
 	private JLabel idField;
 	private JLabel itemField;
-	private JLabel notesField;
+	//private JLabel notesField;
+	private JTextArea notesField;
 
-	private Customer customer;
+	public Customer customer;
 
 	private int ping;
 
@@ -51,11 +56,14 @@ class BasQueueRow extends JPanel
 
 	private JLabel item;
 
+	private BASPlugin plugin;
 
-	BasQueueRow(Customer Customer)
+
+	BasQueueRow(Customer Customer, BASPlugin Plugin)
 	{
-
+		this.otherimg = false;
 		this.customer = Customer;
+		this.plugin = Plugin;
 
 		setLayout(new BorderLayout());
 		setBorder(new EmptyBorder(2, 0, 2, 0));
@@ -106,6 +114,45 @@ class BasQueueRow extends JPanel
 
 		final JPopupMenu popupMenu = new JPopupMenu();
 		popupMenu.setBorder(new EmptyBorder(5, 5, 5, 5));
+		String menuText;
+		int option;
+
+		if(customer.getStatus().equals("")){
+			menuText = "Mark " + customer.getName()+ " online(doesn't work on names with a space)";
+			option = 3;//TODO fix for spaces
+		}
+		else if(customer.getNotes().toLowerCase().contains("cooldown")){
+			menuText = "End Cooldown for: " + customer.getName()+ "(Currently unavailable)";
+			option = 0;
+		}
+		else if(customer.getStatus().equals("In Progress") && customer.getItem().equals("Level 5 Roles") && customer.getNotes().contains("d started") ){
+			menuText = "Mark " + customer.getName()+ " done(doesn't work on names with a space)";
+			option = 2;
+		}
+		else if(customer.getStatus().equals("In Progress") && customer.getItem().equals("Level 5 Roles")){
+			menuText = "Start Cooldown for: " + customer.getName();
+			option = 4;
+		}
+		else if(customer.getStatus().equals("In Progress")){
+			menuText = "Mark " + customer.getName()+ " done(doesn't work on names with a space)";
+			option = 2;
+		}
+		else{
+			menuText = "Mark " + customer.getName()+ " in progress(doesn't work on names with a space)";
+			option = 1;
+		}
+
+		addMenuOption.setText(menuText);
+
+		for (ActionListener listener : addMenuOption.getActionListeners())
+		{
+			addMenuOption.removeActionListener(listener);
+		}
+
+		addMenuOption.addActionListener(e ->
+		{
+			this.plugin.markCustomer(option,customer);
+		});
 		popupMenu.add(addMenuOption);
 
 		setComponentPopupMenu(popupMenu);
@@ -128,7 +175,7 @@ class BasQueueRow extends JPanel
 		itemField.setOpaque(false);
 
 		JPanel notesField = buildNotesField(Customer);
-		notesField.setPreferredSize(new Dimension(40, 10));
+		notesField.setPreferredSize(new Dimension(5, 34));
 		notesField.setOpaque(false);
 
 		recolour(Customer);
@@ -189,23 +236,32 @@ class BasQueueRow extends JPanel
 			case "Online":
 				if(!customer.getNotes().toLowerCase().contains("cd")&&!customer.getNotes().toLowerCase().contains("cooldown"))
 				{
-					curColor = new Color(237,237,237);
-					this.setBackground(curColor);
+					curColor = Color.green;
+					if(this.item == null)
+					{
+						itemField.setForeground(curColor);
+					}
+					notesField.setForeground(curColor);
+					nameField.setForeground(curColor);
+					idField.setForeground(curColor);
 
 					break;
 				}
 				curColor = new Color(99,151,255);
 				this.setBackground(curColor);
+				notesField.setBackground(curColor);
 				break;
 
 			case "In Progress":
 				curColor = new Color(241,235,118);;
 				this.setBackground(curColor);
+				notesField.setBackground(curColor);
 				break;
 
 			case "Done":
 				curColor = new Color(129,129,129);;
 				this.setBackground(curColor);
+				notesField.setBackground(curColor);
 				break;
 
 			case "":
@@ -248,16 +304,50 @@ class BasQueueRow extends JPanel
 				column.add(itemField);
 				return column;
 
-			default:
+			case "Queen Kill - Diary":
 				column = new JPanel(new BorderLayout());
-				column.setBorder(new EmptyBorder(0, 5, 0, 5));
-
-				itemField = new JLabel(cust.getItem());
-				itemField.setFont(FontManager.getRunescapeSmallFont());
-
-				column.add(itemField, BorderLayout.WEST);
-
+				itemField = new JLabel(new ImageIcon(ImageUtil.loadImageResource(getClass(), "/queen_kill.png")));
+				column.add(itemField);
 				return column;
+
+			case "Level 5 Roles":
+				column = new JPanel(new BorderLayout());
+				itemField = new JLabel(new ImageIcon(ImageUtil.loadImageResource(getClass(), "/Level5s.png")));
+				column.add(itemField);
+				return column;
+
+			case "Hat":
+				column = new JPanel(new BorderLayout());
+				itemField = new JLabel(new ImageIcon(ImageUtil.loadImageResource(getClass(), "/hat4.png")));
+				column.add(itemField);
+				return column;
+
+
+			default:
+				if(item.toLowerCase().contains("gamble")){
+					column = new JPanel(new BorderLayout());
+					itemField = new JLabel(new ImageIcon(ImageUtil.loadImageResource(getClass(), "/other.png")));
+					column.add(itemField);
+					return column;
+
+				}
+				if(item.toLowerCase().contains("points") || item.toLowerCase().contains("pts")){
+					column = new JPanel(new BorderLayout());
+					itemField = new JLabel(new ImageIcon(ImageUtil.loadImageResource(getClass(), "/points.png")));
+					otherimg = true;
+					column.add(itemField);
+					return column;
+
+				}
+				else
+				{
+					column = new JPanel(new BorderLayout());
+					itemField = new JLabel(new ImageIcon(ImageUtil.loadImageResource(getClass(), "/Other.png")));
+					column.add(itemField);
+					otherimg = true;
+					return column;
+				}
+
 		}
 	}
 
@@ -320,8 +410,18 @@ class BasQueueRow extends JPanel
 		JPanel column = new JPanel(new BorderLayout());
 		column.setBorder(new EmptyBorder(0, 5, 0, 5));
 
+
 		String activity = cust.getNotes();
-		notesField = new JLabel(cust.getNotes());
+		if(activity.equals("") && this.otherimg){
+			activity = cust.getItem();
+		}
+
+		notesField = new JTextArea(2, 10);
+		notesField.setText(activity);
+
+		notesField.setLineWrap(true);
+		notesField.setEditable(false);
+		notesField.setOpaque(false);
 		notesField.setFont(FontManager.getRunescapeSmallFont());
 
 

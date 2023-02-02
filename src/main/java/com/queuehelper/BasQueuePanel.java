@@ -1,61 +1,80 @@
 package com.queuehelper;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import javax.swing.GroupLayout;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.event.DocumentListener;
+import javax.swing.border.EmptyBorder;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.PluginPanel;
-import net.runelite.client.ui.components.IconTextField;
-import net.runelite.client.util.ImageUtil;
+import net.runelite.client.ui.components.materialtabs.MaterialTab;
+import net.runelite.client.ui.components.materialtabs.MaterialTabGroup;
 
 
 public class BasQueuePanel extends PluginPanel
 {
 
 
-
-	private JLabel torsoimg;
-
-
-	final BufferedImage lvl5all = ImageUtil.loadImageResource(getClass(), "/panellogo.png");
-	final BufferedImage lvl5att = ImageUtil.loadImageResource(getClass(), "/panellogo.png");
-	final BufferedImage lvl5coll = ImageUtil.loadImageResource(getClass(), "/panellogo.png");
-	final BufferedImage lvl5heal = ImageUtil.loadImageResource(getClass(), "/panellogo.png");
-	final BufferedImage lvl5def = ImageUtil.loadImageResource(getClass(), "/panellogo.png");
-	final BufferedImage gambles = ImageUtil.loadImageResource(getClass(), "/panellogo.png");
-
 	private BASPlugin plugin;
 
-	private final JPanel listContainer;
+	private final JPanel onlistContainer;
+
+	private final JPanel offlistContainer;
 
 	private ArrayList<BasQueueRow> rows;
 
-	BasQueuePanel(BASPlugin plugin)
+	private BASConfig config;
+
+	private JButton nextButton;
+
+	private final JPanel display = new JPanel();
+
+	private final MaterialTabGroup tabGroup = new MaterialTabGroup(display);
+
+
+
+
+	BasQueuePanel(BASPlugin plugin, BASConfig Config)
 	{
 		this.plugin = plugin;//not sure why needed but fixes scrollbar
+		this.config = Config;
+
 
 		this.rows = new ArrayList<>();
-		this.listContainer = new JPanel();
+		this.onlistContainer = new JPanel();
+		this.offlistContainer = new JPanel();
 
 		this.setBorder(null);
 		this.setLayout(new DynamicGridLayout(0, 1));
 
-		JPanel headerContainer = this.buildHeader();
-		this.listContainer.setLayout(new GridLayout(0, 1));
 
-		this.add(headerContainer);
-		this.add(this.listContainer);
+		this.onlistContainer.setLayout(new GridLayout(0, 1));
+		this.offlistContainer.setLayout(new GridLayout(0, 1));
+
+
+
+
+
+		setLayout(new BorderLayout());
+		setBackground(ColorScheme.DARK_GRAY_COLOR);
+
+		MaterialTab offersTab = new MaterialTab("Online", tabGroup, onlistContainer);
+		MaterialTab searchTab = new MaterialTab("Offline", tabGroup, offlistContainer);
+
+		tabGroup.setBorder(new EmptyBorder(5, 0, 0, 0));
+		tabGroup.addTab(offersTab);
+		tabGroup.addTab(searchTab);
+		tabGroup.select(offersTab); // selects the default selected tab
+
+		add(tabGroup, BorderLayout.NORTH);
+		add(display, BorderLayout.CENTER);
+
+
+
+
 
 
 	}
@@ -70,31 +89,71 @@ public class BasQueuePanel extends PluginPanel
 	void populate(LinkedHashMap<String, Customer> queue)
 	{
 		this.rows.clear();
-		this.listContainer.removeAll();
+		this.offlistContainer.removeAll();
+		this.onlistContainer.removeAll();
 		for (Customer cust : queue.values())
 		{
-				this.rows.add(new BasQueueRow(cust));//TODO add putting item image
+			this.rows.add(new BasQueueRow(cust, plugin));
+
 		}
 		for(BasQueueRow row : rows){
-			listContainer.add(row);
+			if(!this.config.showOnlineOnly() || row.customer.getStatus().equals("Online") || row.customer.getStatus().equals("In Progress"))
+			{
+				onlistContainer.add(row);
+			}
+			else
+			{
+				offlistContainer.add(row);
+			}
 		}
+		onlistContainer.add(addNextButton("Next"));
+		onlistContainer.add(addRefreshButton("Refresh"));
+		offlistContainer.add(addNextButton("Next"));
+		offlistContainer.add(addRefreshButton("Refresh"));
 		this.updateList();
 	}
 
 
-	/**
-	 * Builds the entire table header.
-	 */
-	private JPanel buildHeader()
-	{
-		Customer firstRow = new Customer("NAME", "ID", "Priority","CustomerStatus", "Notes", "Item");
-		JPanel header = new BasQueueRow(firstRow);
+	private JButton addRefreshButton(String label) {
+		final JPanel container = new JPanel();
+		container.setLayout(new BorderLayout());
 
-		//header.add(header, BorderLayout.CENTER);
+		JButton resetButton = new JButton(label);
 
+		resetButton.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		resetButton.setBorder(new EmptyBorder(5, 7, 5, 7));
+		resetButton.setToolTipText("refreshes the online Queue and redraws it");
+		resetButton.setEnabled(true);
 
-		return header;
+		resetButton.addActionListener(e -> {
+			this.plugin.refreshQueue();
+		});
+
+		container.add(resetButton, BorderLayout.CENTER);
+		//add(container, BorderLayout.NORTH);
+
+		return resetButton;
 	}
+
+	private JPanel addNextButton(String label) {
+		final JPanel container = new JPanel();
+		container.setLayout(new BorderLayout());
+
+		nextButton = new JButton(label);
+
+		nextButton.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		nextButton.setBorder(new EmptyBorder(5, 7, 5, 7));
+
+		nextButton.addActionListener(e->this.plugin.getNext());
+
+
+		container.add(nextButton, BorderLayout.CENTER);
+
+		//add(container, BorderLayout.SOUTH);
+		return container;
+	}
+
+
 
 
 }
