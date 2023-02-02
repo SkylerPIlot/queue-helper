@@ -65,4 +65,15 @@ public interface BASConfig extends Config {
 	{
 		return "Paste your key here";
 	}
+
+	@ConfigItem(
+		keyName = "OnlineOnly",
+		name = "onlineOnly",
+		description = "Generates only online members in the side panel",
+		position = 14
+	)
+	default boolean showOnlineOnly()
+	{
+		return false;
+	}
 }
