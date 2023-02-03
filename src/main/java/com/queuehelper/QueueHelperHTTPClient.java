@@ -24,31 +24,34 @@
 	 */
 package com.queuehelper;
 
-import net.runelite.client.config.Config;
-import net.runelite.client.config.ConfigGroup;
-import net.runelite.client.config.ConfigItem;
+import java.io.IOException;
+import java.util.List;
+import net.runelite.client.ui.NavigationButton;
 
-@ConfigGroup("BAS")
-public interface BASConfig extends Config {
-  @ConfigItem(keyName = "autoUpdateQueue", name = "Queue Auto Updater", description = "Automatically updates the BAS Queue", position = 1)
-  default boolean autoUpdateQueue() {
-    return true;
-  }
-  
-  @ConfigItem(keyName = "queueName", name = "Queue Sheet Name", description = "The name that you would like the queue to recognise you as. If not set it will use the currently logged in username.", position = 2)
-  default String queueName() {
-    return "";
-  }
+//To create your own implementation, change which implementation is called by the queeu object. To make sure data is
+	//"Correct" look how the queue class handles the IO data especially how it creates the list of customers
 
-	@ConfigItem(
-		keyName = "APIKEY",
-		name = "KEY",
-		description = "Please place your api key here",
-		position = 3
-	)
-	default String apikey()
+public interface QueueHelperHTTPClient
+{
+
+	static QueueHelperHTTPClient getInstance(String apikey) throws IOException
 	{
-		return "Paste your key here";
+		return null;
 	}
+
+
+	void setAPikey(String apikey);
+
+	public String getCustomerID(String name) throws IOException;
+
+	public boolean markCustomer(int option, String name) throws IOException;
+
+	public List<String[]> readCSV(List<String[]> csv) throws IOException;//Please pay close attention to how the queue object expects the customer name/id and so forth. A small quirk is it expect cooldown status to be present in the "notes" part of the customer
+
+	public NavigationButton getNavButton();
+
+	public boolean updateQueuebackend(StringBuilder urlList, String name) throws IOException;
+
+	public boolean addCustomer(String itemName,String priority, String custName, String addedBy) throws IOException;
 
 }
