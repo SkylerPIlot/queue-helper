@@ -53,7 +53,6 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 
 	private OkHttpClient Basclient;
 
-	//TODO Deobfuscate
 	private String CustIDQuery;
 	private String RetrieveCSVQuery;
 	private String UPDATE_OPTION_GNC;

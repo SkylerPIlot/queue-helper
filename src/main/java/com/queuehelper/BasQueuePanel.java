@@ -27,6 +27,8 @@ package com.queuehelper;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -80,7 +82,7 @@ public class BasQueuePanel extends PluginPanel
 
 	BasQueuePanel(BASPlugin plugin, BASConfig Config)
 	{
-		this.plugin = plugin;//not sure why needed but fixes scrollbar
+		this.plugin = plugin;
 		this.config = Config;
 
 		this.rows = new ArrayList<>();
@@ -231,6 +233,7 @@ public class BasQueuePanel extends PluginPanel
 		namearea.setLineWrap(true);
 		namearea.setEditable(true);
 		namearea.setOpaque(true);
+		namearea.addFocusListener(custAreaFocus());
 		namearea.setBorder(new EmptyBorder(20, 20, 2, 20));
 
 		String COMMIT_ACTION = "commit";
@@ -258,6 +261,11 @@ public class BasQueuePanel extends PluginPanel
 		container.add(custButton, BorderLayout.CENTER);
 		return container;
 	}
+	public void changeCustomerText(String name){
+		namearea = (JTextArea) nameAreaPanel.getComponent(0);
+		this.namearea.setText(name);
+	}
+
 	private void addCustomerAction(){
 		namearea = (JTextArea) nameAreaPanel.getComponent(0);
 		try
@@ -268,6 +276,32 @@ public class BasQueuePanel extends PluginPanel
 		catch (Exception e){
 			e.printStackTrace();
 		}
+
+	}
+	//Deletes the default text and replaces it if you didn't type anything
+	private FocusListener custAreaFocus(){
+		FocusListener focus = new FocusListener()
+		{
+			@Override
+			public void focusGained(FocusEvent e)
+			{
+			if(namearea.getText().equals("Customer"))
+				{
+				namearea = (JTextArea) nameAreaPanel.getComponent(0);
+				namearea.setText("");
+				}
+			}
+
+			@Override
+			public void focusLost(FocusEvent e)
+			{
+			if(namearea.getText().equals("")){
+				namearea = (JTextArea) nameAreaPanel.getComponent(0);
+				namearea.setText("Customer");
+			}
+			}
+		};
+		return focus;
 
 	}
 

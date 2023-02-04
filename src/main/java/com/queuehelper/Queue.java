@@ -108,7 +108,6 @@ public class Queue
 
 	private void createQueue() throws IOException
 	{
-		//TODO remove the need for readCSV to have a List<String[]> passed into it
 		this.OldQueue = httpClient.readCSV(this.OldQueue);
 		for (String[] CSVLine : this.OldQueue)
 		{

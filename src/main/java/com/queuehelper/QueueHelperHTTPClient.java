@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.List;
 import net.runelite.client.ui.NavigationButton;
 
-//To create your own implementation, change which implementation is called by the queeu object. To make sure data is
+//To create your own implementation, change which implementation is called by the Queue object. To make sure data is
 	//"Correct" look how the queue class handles the IO data especially how it creates the list of customers
 
 public interface QueueHelperHTTPClient

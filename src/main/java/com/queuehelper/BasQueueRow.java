@@ -28,6 +28,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.ImageIcon;
@@ -39,8 +41,9 @@ import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.util.ImageUtil;
+import org.graalvm.compiler.core.common.type.ArithmeticOpTable;
 
-class BasQueueRow extends JPanel
+	class BasQueueRow extends JPanel
 {
 	private final JMenuItem addMenuOption = new JMenuItem();
 
@@ -121,14 +124,14 @@ class BasQueueRow extends JPanel
 
 		if(customer.getStatus().equals("")){
 			menuText = "Mark " + customer.getName()+ " online(doesn't work on names with a space)";
-			option = 3;//TODO fix for spaces
+			option = 3;
 			tooltipHover = "Offline";
 		}
 		else if(customer.getNotes().toLowerCase().contains("cooldown")){
 			menuText = "End Cooldown for: " + customer.getName()+ "(Currently unavailable)";
 			option = 0;
 			tooltipHover = "Cooldown";
-		}
+		}//TODO fix nesting
 		else if(customer.getStatus().equals("In Progress") && customer.getItem().equals("Level 5 Roles") && (customer.getNotes().contains("d started") || customer.getNotes().contains("2/3"))){
 			menuText = "Mark " + customer.getName()+ " done(doesn't work on names with a space)";
 			option = 2;
@@ -344,7 +347,7 @@ class BasQueueRow extends JPanel
 		column.setBorder(new EmptyBorder(0, 0, 0, 5));
 
 		idField = new JLabel(cust.getID());
-		idField.setFont(FontManager.getRunescapeSmallFont());
+		idField.setFont(FontManager.getRunescapeSmallFont().deriveFont(8));
 
 		idField.setToolTipText(cust.getID());
 		// Pass up events - https://stackoverflow.com/a/14932443
@@ -404,10 +407,11 @@ class BasQueueRow extends JPanel
 		notesField = new JTextArea(2, 10);
 		notesField.setText(activity);
 
+
 		notesField.setLineWrap(true);
-		notesField.setEditable(false);
+		notesField.setEditable(true);
 		notesField.setOpaque(false);
-		notesField.setFont(FontManager.getRunescapeSmallFont());
+		notesField.setFont(FontManager.getRunescapeSmallFont().deriveFont(this.plugin.fontSize));
 
 
 		column.add(notesField, BorderLayout.WEST);
@@ -428,6 +432,10 @@ class BasQueueRow extends JPanel
 
 		return column;
 	}
+
+
+
+
 
 
 }

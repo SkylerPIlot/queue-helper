@@ -41,10 +41,22 @@ public interface BASConfig extends Config {
   }
 
 	@ConfigItem(
+		keyName = "fontsize",
+		name = "Note Font Size",
+		description = "changes the font size in the notes",
+		position = 3
+	)
+	default int fontSize()
+	{
+		return 8;
+	}
+
+
+	@ConfigItem(
 		keyName = "APIKEY",
 		name = "KEY",
 		description = "Please place your api key here",
-		position = 3
+		position = 4
 	)
 	default String apikey()
 	{
