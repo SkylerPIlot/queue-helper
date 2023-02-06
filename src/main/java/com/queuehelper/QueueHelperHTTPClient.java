@@ -26,6 +26,8 @@ package com.queuehelper;
 
 import java.io.IOException;
 import java.util.List;
+import net.runelite.api.FriendsChatRank;
+import net.runelite.api.events.ChatMessage;
 import net.runelite.client.ui.NavigationButton;
 
 //To create your own implementation, change which implementation is called by the Queue object. To make sure data is
@@ -53,5 +55,7 @@ public interface QueueHelperHTTPClient
 	public boolean updateQueuebackend(StringBuilder urlList, String name) throws IOException;
 
 	public boolean addCustomer(String itemName,String priority, String custName, String addedBy) throws IOException;
+
+	public boolean sendChatMsgDiscord(ChatMessage chatmessage) throws IOException;
 
 }
