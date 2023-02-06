@@ -131,21 +131,23 @@ import org.graalvm.compiler.core.common.type.ArithmeticOpTable;
 			menuText = "End Cooldown for: " + customer.getName()+ "(Currently unavailable)";
 			option = 0;
 			tooltipHover = "Cooldown";
-		}//TODO fix nesting
-		else if(customer.getStatus().equals("In Progress") && customer.getItem().equals("Level 5 Roles") && (customer.getNotes().contains("d started") || customer.getNotes().contains("2/3"))){
-			menuText = "Mark " + customer.getName()+ " done(doesn't work on names with a space)";
-			option = 2;
-			tooltipHover = "In Progress last session lvl5s";
-		}
-		else if(customer.getStatus().equals("In Progress") && customer.getItem().equals("Level 5 Roles")){
-			menuText = "Start Cooldown for: " + customer.getName();
-			option = 4;
-			tooltipHover = "In Progress lvl5s";
 		}
 		else if(customer.getStatus().equals("In Progress")){
-			menuText = "Mark " + customer.getName()+ " done(doesn't work on names with a space)";
-			option = 2;
-			tooltipHover = "In Progress";
+			if(customer.getItem().equals("Level 5 Roles") && (customer.getNotes().contains("d started") || customer.getNotes().contains("2/3"))){
+				menuText = "Mark " + customer.getName()+ " done(doesn't work on names with a space)";
+				option = 2;
+				tooltipHover = "In Progress last session lvl5s";
+			}
+			else if(customer.getItem().equals("Level 5 Roles")){
+				menuText = "Start Cooldown for: " + customer.getName();
+				option = 4;
+				tooltipHover = "In Progress lvl5s";
+			}
+			else{
+				menuText = "Mark " + customer.getName()+ " done(doesn't work on names with a space)";
+				option = 2;
+				tooltipHover = "In Progress";
+			}
 		}
 		else if(customer.getStatus().equals("Done"))
 		{

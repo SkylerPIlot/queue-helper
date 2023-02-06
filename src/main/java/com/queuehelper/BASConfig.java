@@ -48,7 +48,7 @@ public interface BASConfig extends Config {
 	)
 	default int fontSize()
 	{
-		return 8;
+		return 16;
 	}
 
 

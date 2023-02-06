@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.SwingUtilities;
+import net.runelite.api.FriendsChatRank;
+import net.runelite.api.events.ChatMessage;
 import net.runelite.client.ui.NavigationButton;
 
 public class Queue
@@ -199,4 +201,16 @@ public class Queue
 	{
 		httpClient.updateQueuebackend(urlList,name);
 	}
+
+	public void sendChatMsgDiscord(ChatMessage chatMessage){
+		try
+		{
+			httpClient.sendChatMsgDiscord(chatMessage);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
 }

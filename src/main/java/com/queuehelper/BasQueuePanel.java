@@ -40,6 +40,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.border.EmptyBorder;
+import net.runelite.api.NPC;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.PluginPanel;
@@ -65,6 +66,12 @@ public class BasQueuePanel extends PluginPanel
 	private JButton custButton;
 
 	private JTextArea namearea;
+
+	private JPanel nextRefreshArea;
+
+	private JPanel custPrioArea;
+
+
 
 	private String currItem;
 
@@ -109,6 +116,10 @@ public class BasQueuePanel extends PluginPanel
 		add(tabGroup, BorderLayout.NORTH);
 		add(display, BorderLayout.CENTER);
 
+		nextRefreshArea = refreshNextButton();
+		this.nameAreaPanel = customerNamePrioPanel();
+		this.custPrioArea = customerAddPanel();
+
 	}
 
 	public void setAutoCompleteKeyWords(ArrayList<String> Keywords){
@@ -137,15 +148,11 @@ public class BasQueuePanel extends PluginPanel
 				offlistContainer.add(row);
 			}
 		}
-		this.nameAreaPanel = customerNamePrioPanel();
-		onlistContainer.add(refreshNextButton());
+
+		onlistContainer.add(nextRefreshArea);
 		onlistContainer.add(nameAreaPanel);
-		onlistContainer.add(customerAddPanel());
-		//todo fix adding on offline side(idk why ppl would use this)
-		//TODO this redraws + recreates a whole bunch of elements instead of creating/reusing works because java gc, but needs refactored to be cleaned
-		offlistContainer.add(refreshNextButton());
-		offlistContainer.add(customerNamePrioPanel());
-		offlistContainer.add(customerAddPanel());
+		onlistContainer.add(custPrioArea);
+
 	}
 
 

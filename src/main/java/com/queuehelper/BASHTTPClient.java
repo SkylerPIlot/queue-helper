@@ -27,9 +27,13 @@ package com.queuehelper;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.List;
+import net.runelite.api.FriendsChatRank;
+import net.runelite.api.events.ChatMessage;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.Text;
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -38,8 +42,6 @@ import okhttp3.Response;
 /**
 This Class handles all IO communication to the backend
  */
-
-//TODO Make a new backend and utilize it this all just communicate via proxy to the old backend
 
 public class BASHTTPClient implements QueueHelperHTTPClient
 {
@@ -69,6 +71,8 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 	private String OptionQuery;
 	private String CustomerNameQuery;
 	private String basephp;
+
+
 
 	private BASHTTPClient(String apikey) throws IOException
 	{
@@ -254,6 +258,7 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 					csv.add(new String[] {LineItems[PRIORITY], LineItems[PRIORITY].equals("R") ? LineItems[RNAMES] : LineItems[PNAME], LineItems[STATUS], LineItems[ID], LineItems[ITEM], LineItems[NOTES]});
 				}
 			}
+			response.close();
 			return csv;
 		}
 
@@ -322,6 +327,41 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 		{
 			return response.isSuccessful();
 		}
+	}
+
+	@Override
+	public boolean sendChatMsgDiscord(ChatMessage chatmessage) throws IOException
+	{
+		String unhashedMsg = chatmessage.getName() + chatmessage.getMessage() + (((int)(chatmessage.getTimestamp()/10)*10));
+
+		int hasedMsg = unhashedMsg.hashCode();
+		OkHttpClient client = Basclient;
+		HttpUrl url = apiBase.newBuilder()
+			.addPathSegment("disc")
+			.build();
+
+		Request request = new Request.Builder()
+			.header("User-Agent", "RuneLite")
+			.url(url)
+			.header("Content-Type", "application/json")
+			.header("x-api-key", this.apikey)
+			.header("username",chatmessage.getName().replace(' ', ' '))
+			.header("msg",chatmessage.getMessage())
+			.header("hash",String.valueOf(hasedMsg))
+			.build();
+
+		client.newCall(request).enqueue(new Callback()
+		{
+			@Override
+			public void onFailure(Call call, IOException e)
+			{
+
+			}
+
+			@Override
+			public void onResponse(Call call, Response response) throws IOException { response.close(); }
+		});
+		return true;
 	}
 
 }

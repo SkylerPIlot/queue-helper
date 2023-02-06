@@ -67,7 +67,9 @@ public class BASPlugin extends Plugin implements ActionListener
 	private BasQueuePanel basQueuePanel;
 	private NavigationButton navButton;
 
-	public int fontSize;
+	public float fontSize;
+
+	private boolean msgIn = false;
 
 	private static final String KICK_OPTION = "Kick";
 	private static final ImmutableList<String> BEFORE_OPTIONS = ImmutableList.of("Add friend", "Remove friend", KICK_OPTION);
@@ -134,7 +136,9 @@ public class BASPlugin extends Plugin implements ActionListener
                     .type(ChatMessageType.CONSOLE)
                     .runeLiteFormattedMessage(errorMsg)
                     .build());
+			client.getAccountHash();
             return true;
+
         }
         return false;
 
@@ -292,8 +296,70 @@ public class BASPlugin extends Plugin implements ActionListener
     @Subscribe
     public void onChatMessage(ChatMessage chatMessage)
     {
+		if(!isRank() || chatMessage.getType() != ChatMessageType.FRIENDSCHAT)
+		{
+			return;
+		}
+
+		FriendsChatRank rank = getRank(chatMessage.getName());
+		if (isConfigApiEmpty()){
+			return;
+		}//TODO fix hanging
+
+		try{
+			int numMsg = (int) chatMessage.getMessage().charAt(0);
+			if((48 <= numMsg && numMsg <= 53) && (chatMessage.getMessage().contains("out") || chatMessage.getMessage().contains("f") || chatMessage.getMessage().contains("a") || chatMessage.getMessage().contains("*") || chatMessage.getMessage().contains("c") || chatMessage.getMessage().contains("d") || chatMessage.getMessage().contains("h") || (chatMessage.getMessage().contains("r") && !chatMessage.getMessage().contains("reg"))))
+			{
+				if(48 <= ((int) chatMessage.getMessage().charAt(1)) && ((int) chatMessage.getMessage().charAt(1)) <= 57){
+					msgIn = false;
+				}
+				else{
+					msgIn = true;
+				}
+			}
+		}
+		catch (NumberFormatException ex){
+			log.debug("Normal behavior");
+		}
+
+
+		try{
+			int numMsg = Integer.parseInt(chatMessage.getMessage());
+			if(0 <= numMsg  && numMsg <= 5)
+			{
+				msgIn = true;
+			}
+		}
+		catch (NumberFormatException ex){
+			log.debug("Normal behavior");
+		}
+
+		if (chatMessage.getMessage().toLowerCase().contains("t+") || chatMessage.getMessage().toLowerCase().contains("-=-=") || chatMessage.getMessage().toLowerCase().contains("---") || chatMessage.getMessage().toLowerCase().contains("===") || chatMessage.getMessage().toLowerCase().equals("jf") || chatMessage.getMessage().toLowerCase().equals("out")){
+			msgIn = true;
+		}
+
+
+
+
+		if (((chatMessage.getMessage().contains("+") && chatMessage.getMessage().charAt(0) == '+') || msgIn) && !chatMessage.getMessage().toLowerCase().contains("@"))
+		{
+			msgIn = false;
+			queue.sendChatMsgDiscord(chatMessage);
+
+
+
+		}
 	//TODO implement webhook + blairm messages + retrieving and using reuls from the AWS server
     }
+
+	private FriendsChatRank getRank(String playerName)
+	{
+		FriendsChatManager friendsChatManager = this.client.getFriendsChatManager();
+		if (friendsChatManager == null)
+			return FriendsChatRank.UNRANKED;
+		FriendsChatMember friendsChatMember = (FriendsChatMember) friendsChatManager.findByName(playerName);
+		return (friendsChatMember != null) ? friendsChatMember.getRank() : FriendsChatRank.UNRANKED;
+	}
 
 
 	@Override
@@ -303,16 +369,15 @@ public class BASPlugin extends Plugin implements ActionListener
 	}
 
 	//used in BasQueueRow to run the "Next" button
-	public void getNext(){//TODO Return queue empty when cust == null
+	public void getNext(){
     	Customer next = queue.getNext();
-		String chatMessage = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("Next customer in line: ").append(ChatColorType.HIGHLIGHT).append("Priority: " + next.getPriority() + " " + next.getName() + " " + next.getItem() + " " + next.getNotes()).build();
-		BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
-			.type(ChatMessageType.CONSOLE)
-			.runeLiteFormattedMessage(chatMessage)
-			.build());
+    	if (next == null) {
+    		sendChat("queue empty");
+    		return;
+		}
+		sendChat("Next customer in line: Priority " + next.getPriority() + " " + next.getName() + " " + next.getItem() + " " + next.getNotes());
 	}
 
-	//TODO implement this to send all msgs instead of sometimes building my own and sometimes not
 	public void sendChat(String msg){
 		String chatMessage = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append(msg).build();
     	BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
@@ -328,18 +393,11 @@ public class BASPlugin extends Plugin implements ActionListener
     		return;
 		}
     	if(queue.addToQueue(item, priority, name, config.queueName())){
-			String chatMessage = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("Added: ").append(ChatColorType.HIGHLIGHT).append(name + " for " + priority + " " + item).build();
-			BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
-				.type(ChatMessageType.CONSOLE)
-				.runeLiteFormattedMessage(chatMessage)
-				.build());
+    		sendChat("Added: " + name + " for " + priority + " " + item);
+
 		}
     	else{
-			String chatMessage = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("Failed to add: ").append(ChatColorType.HIGHLIGHT).append(name + " for " + priority + " " + item).build();
-			BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
-				.type(ChatMessageType.CONSOLE)
-				.runeLiteFormattedMessage(chatMessage)
-				.build());
+			sendChat("Failed to add: " + name + " for " + priority + " " + item);
 		}
 		refreshQueue();
 
