@@ -71,51 +71,6 @@ import org.graalvm.compiler.core.common.type.ArithmeticOpTable;
 
 		setLayout(new BorderLayout());
 		setBorder(new EmptyBorder(2, 0, 2, 0));
-
-		addMouseListener(new MouseAdapter()
-		{
-			@Override
-			public void mouseClicked(MouseEvent mouseEvent)
-			{
-				if (mouseEvent.getClickCount() == 2)
-				{
-
-				}
-			}
-
-			@Override
-			public void mousePressed(MouseEvent mouseEvent)
-			{
-				if (mouseEvent.getClickCount() == 2)
-				{
-					setBackground(getBackground().brighter());
-				}
-			}
-
-			@Override
-			public void mouseReleased(MouseEvent mouseEvent)
-			{
-				if (mouseEvent.getClickCount() == 2)
-				{
-					setBackground(getBackground().darker());
-				}
-			}
-
-			@Override
-			public void mouseEntered(MouseEvent mouseEvent)
-			{
-				BasQueueRow.this.lastBackground = getBackground();
-				setBackground(getBackground().brighter());
-			}
-
-			@Override
-			public void mouseExited(MouseEvent mouseEvent)
-			{
-				setBackground(lastBackground);
-			}
-		});
-
-
 		final JPopupMenu popupMenu = new JPopupMenu();
 		popupMenu.setBorder(new EmptyBorder(5, 5, 5, 5));
 		String menuText;
@@ -160,6 +115,52 @@ import org.graalvm.compiler.core.common.type.ArithmeticOpTable;
 			option = 1;
 			tooltipHover = "Online";
 		}
+
+		addMouseListener(new MouseAdapter()
+		{
+			@Override
+			public void mouseClicked(MouseEvent mouseEvent)
+			{
+				if (mouseEvent.getClickCount() == 2)
+				{
+					plugin.markCustomer(option,customer);
+				}
+			}
+
+			@Override
+			public void mousePressed(MouseEvent mouseEvent)
+			{
+				if (mouseEvent.getClickCount() == 2)
+				{
+					setBackground(getBackground().brighter());
+				}
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent mouseEvent)
+			{
+				if (mouseEvent.getClickCount() == 2)
+				{
+					setBackground(getBackground().darker());
+				}
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent mouseEvent)
+			{
+				BasQueueRow.this.lastBackground = getBackground();
+				setBackground(getBackground().brighter());
+			}
+
+			@Override
+			public void mouseExited(MouseEvent mouseEvent)
+			{
+				setBackground(lastBackground);
+			}
+		});
+
+
+
 
 		addMenuOption.setText(menuText);
 
@@ -402,8 +403,8 @@ import org.graalvm.compiler.core.common.type.ArithmeticOpTable;
 
 
 		String activity = cust.getNotes();
-		if(activity.equals("") && this.otherimg){
-			activity = cust.getItem();
+		if(this.otherimg){
+			activity = cust.getItem() + " " + cust.getNotes();
 		}
 
 		notesField = new JTextArea(2, 10);
@@ -411,6 +412,7 @@ import org.graalvm.compiler.core.common.type.ArithmeticOpTable;
 
 
 		notesField.setLineWrap(true);
+		notesField.setWrapStyleWord(true);
 		notesField.setEditable(true);
 		notesField.setOpaque(false);
 		notesField.setFont(FontManager.getRunescapeSmallFont().deriveFont(this.plugin.fontSize));
