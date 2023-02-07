@@ -40,7 +40,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.border.EmptyBorder;
-import net.runelite.api.NPC;
+import net.runelite.client.util.LinkBrowser;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.PluginPanel;
@@ -71,13 +71,13 @@ public class BasQueuePanel extends PluginPanel
 
 	private JPanel custPrioArea;
 
-
-
 	private String currItem;
 
 	private String currPriority;
 
 	private JPanel nameAreaPanel;
+
+	private JButton viewOnlineQueue;
 
 	AutoComplete autoComplete;
 
@@ -120,6 +120,13 @@ public class BasQueuePanel extends PluginPanel
 		this.nameAreaPanel = customerNamePrioPanel();
 		this.custPrioArea = customerAddPanel();
 
+		viewOnlineQueue = new JButton("View Online Queue");
+		viewOnlineQueue.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		viewOnlineQueue.setBorder(new EmptyBorder(5, 7, 5, 7));
+		viewOnlineQueue.addActionListener(e -> LinkBrowser.browse("https://baservices.site/ranksqueue/"));
+
+
+
 	}
 
 	public void setAutoCompleteKeyWords(ArrayList<String> Keywords){
@@ -152,7 +159,7 @@ public class BasQueuePanel extends PluginPanel
 		onlistContainer.add(nextRefreshArea);
 		onlistContainer.add(nameAreaPanel);
 		onlistContainer.add(custPrioArea);
-
+		onlistContainer.add(viewOnlineQueue);
 	}
 
 
@@ -238,6 +245,7 @@ public class BasQueuePanel extends PluginPanel
 		namearea.setFocusTraversalKeysEnabled(false);
 		namearea.setText("Customer");
 		namearea.setLineWrap(true);
+		namearea.setWrapStyleWord(true);
 		namearea.setEditable(true);
 		namearea.setOpaque(true);
 		namearea.addFocusListener(custAreaFocus());
