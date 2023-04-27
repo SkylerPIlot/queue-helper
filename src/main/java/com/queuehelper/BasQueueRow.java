@@ -78,7 +78,7 @@ import org.graalvm.compiler.core.common.type.ArithmeticOpTable;
 		String tooltipHover = "";
 
 		if(customer.getStatus().equals("")){
-			menuText = "Mark " + customer.getName()+ " online(doesn't work on names with a space)";
+			menuText = "Mark " + customer.getName()+ " online";
 			option = 3;
 			tooltipHover = "Offline";
 		}
@@ -89,7 +89,7 @@ import org.graalvm.compiler.core.common.type.ArithmeticOpTable;
 		}
 		else if(customer.getStatus().equals("In Progress")){
 			if(customer.getItem().equals("Level 5 Roles") && (customer.getNotes().contains("d started") || customer.getNotes().contains("2/3"))){
-				menuText = "Mark " + customer.getName()+ " done(doesn't work on names with a space)";
+				menuText = "Mark " + customer.getName()+ " done";
 				option = 2;
 				tooltipHover = "In Progress last session lvl5s";
 			}
@@ -99,19 +99,19 @@ import org.graalvm.compiler.core.common.type.ArithmeticOpTable;
 				tooltipHover = "In Progress lvl5s";
 			}
 			else{
-				menuText = "Mark " + customer.getName()+ " done(doesn't work on names with a space)";
+				menuText = "Mark " + customer.getName()+ " done";
 				option = 2;
 				tooltipHover = "In Progress";
 			}
 		}
 		else if(customer.getStatus().equals("Done"))
 		{
-			menuText = "Mark " + customer.getName()+ " in progress(doesn't work on names with a space)";
+			menuText = "Mark " + customer.getName()+ " in progress";
 			option = 1;
 			tooltipHover = "Done";
 		}
 		else{
-			menuText = "Mark " + customer.getName()+ " in progress(doesn't work on names with a space)";
+			menuText = "Mark " + customer.getName()+ " in progress";
 			option = 1;
 			tooltipHover = "Online";
 		}
