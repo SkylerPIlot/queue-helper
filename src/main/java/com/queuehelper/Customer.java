@@ -24,43 +24,70 @@
 	 */
 package com.queuehelper;
 
-import net.runelite.client.config.Config;
-import net.runelite.client.config.ConfigGroup;
-import net.runelite.client.config.ConfigItem;
+public class Customer
+{
+	private String CustomerName;
 
-@ConfigGroup("BAS")
-public interface BASConfig extends Config {
-  @ConfigItem(keyName = "autoUpdateQueue", name = "Queue Auto Updater", description = "Automatically updates the BAS Queue", position = 1)
-  default boolean autoUpdateQueue() {
-    return true;
-  }
-  
-  @ConfigItem(keyName = "queueName", name = "Queue Sheet Name", description = "The name that you would like the queue to recognise you as. If not set it will use the currently logged in username.", position = 2)
-  default String queueName() {
-    return "";
-  }
+	private String CustomerStatus;
 
-	@ConfigItem(
-		keyName = "fontsize",
-		name = "Note Font Size",
-		description = "changes the font size in the notes",
-		position = 3
-	)
-	default int fontSize()
-	{
-		return 16;
+	private String CustomerPriority;
+
+	private String CustomerID;
+
+	private String CustomerNotes;
+
+	private String CustomerItem;
+
+	public Customer(String name, String id, String priority, String CustomerStatus, String CustomerNotes, String CustomerItem){
+		this.CustomerName = name;
+		this.CustomerID = id;
+		this.CustomerPriority = priority;
+		this.CustomerStatus = CustomerStatus;
+		this.CustomerNotes = CustomerNotes;
+		this.CustomerItem = CustomerItem;
 	}
 
-
-	@ConfigItem(
-		keyName = "APIKEY",
-		name = "KEY",
-		description = "Please place your api key here",
-		position = 4
-	)
-	default String apikey()
+	public Customer(String id, String priority, String priority1, String customerNotes, String customerItem)
 	{
-		return "Paste your key here";
 	}
+
+	public String getName(){
+		return this.CustomerName;
+	}
+	public String getPriority(){
+		return this.CustomerPriority;
+	}
+	public String getID(){
+		return this.CustomerID;
+	}
+	public String getStatus(){
+		return this.CustomerStatus;
+	}
+	public String getItem(){
+		return this.CustomerItem;
+	}
+	public String getNotes() {
+		return this.CustomerNotes;
+	}
+
+	public void setName(String name){
+		this.CustomerName = name;
+	}
+	public void setPriority(String priority){
+		this.CustomerPriority = priority;
+	}
+	public void setID(String id){
+		this.CustomerID = id;
+	}
+	public void setStatus(String status){
+		this.CustomerStatus = status;
+	}
+	public void setItem(String item){
+		this.CustomerItem = item;
+	}
+	public void setNotes(String notes) {
+		this.CustomerNotes = notes;
+	}
+
 
 }
