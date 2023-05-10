@@ -109,7 +109,7 @@ public class BASPlugin extends Plugin implements ActionListener
     	if(!isConfigApiEmpty())
 		{
 			this.basQueuePanel = new BasQueuePanel(this, this.config);
-			this.queue = Queue.getInstance(config.apikey(), basQueuePanel, this);
+			this.queue = Queue.getInstance(config.apikey(), basQueuePanel, this, BasHttpClient);
 			navButton = queue.getNav();
 			navButton.setPanel(basQueuePanel);
 			clientToolbar.addNavigation(navButton);
