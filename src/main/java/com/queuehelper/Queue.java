@@ -35,12 +35,15 @@ import javax.swing.SwingUtilities;
 import net.runelite.api.FriendsChatRank;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.client.ui.NavigationButton;
+import okhttp3.OkHttpClient;
 
 public class Queue
 {
 	private static Queue queue;
 	private boolean shouldUpdateQueue;
 	private BasQueuePanel basPanel;
+
+	private OkHttpClient RLhttpclient;
 
 	Customer tempNext;
 	boolean first = true;
@@ -57,14 +60,15 @@ public class Queue
 
 	BASPlugin plugin;
 
-	private Queue(String apikey, BasQueuePanel BasPanel, BASPlugin Plugin) throws IOException
+	private Queue(String apikey, BasQueuePanel BasPanel, BASPlugin Plugin, OkHttpClient rlhttp) throws IOException
 	{
 		this.plugin = Plugin;
+		this.RLhttpclient = rlhttp;
 		this.basPanel = BasPanel;
 		this.timer = new Timer();
 		this.shouldUpdateQueue = false;
 		this.CurrentQueue = new LinkedHashMap<String, Customer>();
-		this.httpClient = BASHTTPClient.getInstance(apikey);
+		this.httpClient = BASHTTPClient.getInstance(apikey, RLhttpclient);
 		this.OldQueue = new ArrayList<>();
 		createQueue();
 		this.updateQueue = new TimerTask()
@@ -78,11 +82,11 @@ public class Queue
 		timer.scheduleAtFixedRate(this.updateQueue,new Date(),120000);//Schedules a task every 2minutes to both refresh queue object + upload the cc data -> backend
 	}
 
-	public static Queue getInstance(String apikey, BasQueuePanel BasPanel, BASPlugin basPlugin) throws IOException //Singleton queue creation should only need one queue per plugin
+	public static Queue getInstance(String apikey, BasQueuePanel BasPanel, BASPlugin basPlugin,OkHttpClient rlhttp) throws IOException //Singleton queue creation should only need one queue per plugin
 	{
 		if (Queue.queue == null)
 		{
-			Queue.queue = new Queue(apikey, BasPanel, basPlugin);
+			Queue.queue = new Queue(apikey, BasPanel, basPlugin,rlhttp);
 		}
 		else
 		{
@@ -101,7 +105,7 @@ public class Queue
 
 	private void setAPikey(String apikey) throws IOException
 	{
-		this.httpClient = BASHTTPClient.getInstance(apikey);
+		this.httpClient = BASHTTPClient.getInstance(apikey,this.RLhttpclient);
 	}
 
 	public boolean doesCustExist(String name){

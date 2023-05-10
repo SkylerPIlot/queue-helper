@@ -75,19 +75,19 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 
 
 
-	private BASHTTPClient(String apikey) throws IOException
+	private BASHTTPClient(String apikey, OkHttpClient basclient) throws IOException
 	{
-		this.Basclient = new OkHttpClient();
+		this.Basclient = basclient;
 		this.apikey = apikey;
 		this.apiBase = new HttpUrl.Builder().scheme("https").host(BASHTTPClient.HOST_PATH).addPathSegment("Bas_Queuehelper").build();
 		String[] pathsArray = this.getFilePaths();
 		this.updateFilePaths(pathsArray);
 	}
 
-	public static BASHTTPClient getInstance(String apikey) throws IOException
+	public static BASHTTPClient getInstance(String apikey,OkHttpClient basclient) throws IOException
 	{
 		if(BASHTTPClient.client == null){
-			BASHTTPClient.client = new BASHTTPClient(apikey);
+			BASHTTPClient.client = new BASHTTPClient(apikey, basclient);
 		}
 		else{
 			BASHTTPClient.client.setAPikey(apikey);
