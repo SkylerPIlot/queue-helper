@@ -41,7 +41,6 @@ import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.util.ImageUtil;
-import org.graalvm.compiler.core.common.type.ArithmeticOpTable;
 
 	class BasQueueRow extends JPanel
 {
