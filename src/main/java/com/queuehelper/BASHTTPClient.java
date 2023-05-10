@@ -38,6 +38,7 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import java.net.URLEncoder;
 
 /**
 This Class handles all IO communication to the backend
@@ -175,12 +176,11 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 	@Override
 	public String getCustomerID(String name) throws IOException
 	{
-
 		OkHttpClient client = Basclient;
 		HttpUrl url = apiBase.newBuilder()
 			.addPathSegment("bas")
 			.addPathSegment(basephp)
-			.addQueryParameter(CustIDQuery, name.replace(' ', ' '))
+			.addQueryParameter(CustIDQuery, URLEncoder.encode(name.replace(' ', ' '),"UTF-8"))
 			.build();
 
 		Request request = new Request.Builder()
@@ -204,7 +204,7 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 			.addPathSegment("bas")
 			.addPathSegment(basephp)
 			.addQueryParameter(OptionQuery, option + "")
-			.addQueryParameter(CustomerNameQuery, Text.removeTags(Text.sanitize(name)).replace(' ', ' '))
+			.addQueryParameter(CustomerNameQuery, URLEncoder.encode(Text.removeTags(Text.sanitize(name)).replace(' ', ' '),"UTF-8"))
 			.build();
 
 		Request request = new Request.Builder()
@@ -286,7 +286,7 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 			.addPathSegment("bas")
 			.addPathSegment(basephp)
 			.addQueryParameter(csvList, urlList.toString())
-			.addQueryParameter(UPDATE_OPTION_QHN, Text.sanitize(name))
+			.addQueryParameter(UPDATE_OPTION_QHN, URLEncoder.encode(Text.sanitize(name), "UTF-8"))
 			.build();
 
 		Request request = new Request.Builder()
@@ -311,7 +311,7 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 			.addPathSegment(basephp)
 			.addQueryParameter(UPDATE_OPTION_ATQ, "1")
 			.addQueryParameter(UPDATE_OPTION_PRI, priority)
-			.addQueryParameter(UPDATE_OPTION_NAM, custName.replace(' ', ' '))
+			.addQueryParameter(UPDATE_OPTION_NAM, URLEncoder.encode(custName.replace(' ', ' '), "UTF-8"))
 			.addQueryParameter(UPDATE_OPTION_FORMI, itemName)
 			.addQueryParameter(UPDATE_OPTION_QN, addedBy)
 			.build();
