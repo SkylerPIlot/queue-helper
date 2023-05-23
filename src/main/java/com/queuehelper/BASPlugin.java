@@ -265,6 +265,9 @@ public class BASPlugin extends Plugin implements ActionListener
 	//builds a stringbuilder that is then passed to the Implementation of BASHTTPClient to call the backend
     public void updateQueue() throws IOException
 	{
+		if(!isRank()){
+			return;
+		}
         FriendsChatManager clanMemberManager = this.client.getFriendsChatManager();
         if (!this.config.autoUpdateQueue() || clanMemberManager == null)
             return;
