@@ -79,7 +79,7 @@ public class Queue
 				updateQueueTask(ShouldUpdate());
 			}
 		};
-		timer.scheduleAtFixedRate(this.updateQueue,new Date(),120000);//Schedules a task every 2minutes to both refresh queue object + upload the cc data -> backend
+		timer.scheduleAtFixedRate(this.updateQueue,new Date(),30000);//Schedules a task every 2minutes to both refresh queue object + upload the cc data -> backend
 	}
 
 	public static Queue getInstance(String apikey, BasQueuePanel BasPanel, BASPlugin basPlugin,OkHttpClient rlhttp) throws IOException //Singleton queue creation should only need one queue per plugin
@@ -95,6 +95,12 @@ public class Queue
 		return Queue.queue;
 	}
 
+	public void shutdown(){
+		httpClient.shutdown();
+		httpClient = null;
+		queue = null;
+	}
+
 	public boolean ShouldUpdate(){
 		return this.shouldUpdateQueue;
 	}
@@ -106,6 +112,10 @@ public class Queue
 	private void setAPikey(String apikey) throws IOException
 	{
 		this.httpClient = BASHTTPClient.getInstance(apikey,this.RLhttpclient);
+	}
+
+	public Customer getCustomer(String name){
+		return CurrentQueue.get(name);
 	}
 
 	public boolean doesCustExist(String name){
@@ -215,6 +225,14 @@ public class Queue
 		{
 			e.printStackTrace();
 		}
+	}
+
+	public void sendRoundMsd(String main, String collector, String healer, String leech, String defender, int time, String premiumType, String item){
+		int premID = 0;
+		if(!premiumType.equals("Regular")){
+			premID = 1;
+		}
+		httpClient.sendRoundTimeServer(main, collector, healer, leech, defender, time, premID, item);
 	}
 
 }

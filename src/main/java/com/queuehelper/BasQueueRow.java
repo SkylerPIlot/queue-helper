@@ -316,7 +316,7 @@ import net.runelite.client.util.ImageUtil;
 			default:
 				if(item.toLowerCase().contains("gamble")){
 					column = new JPanel(new BorderLayout());
-					itemField = new JLabel(new ImageIcon(ImageUtil.loadImageResource(getClass(), "/other.png")));
+					itemField = new JLabel(new ImageIcon(ImageUtil.loadImageResource(getClass(), "/Other.png")));
 					column.add(itemField);
 					return column;
 
