@@ -44,6 +44,8 @@ public interface QueueHelperHTTPClient
 
 	void setAPikey(String apikey);
 
+	public void shutdown();
+
 	public String getCustomerID(String name) throws IOException;
 
 	public boolean markCustomer(int option, String name) throws IOException;
@@ -57,5 +59,7 @@ public interface QueueHelperHTTPClient
 	public boolean addCustomer(String itemName,String priority, String custName, String addedBy) throws IOException;
 
 	public boolean sendChatMsgDiscord(ChatMessage chatmessage) throws IOException;
+
+	public boolean sendRoundTimeServer(String main, String collector, String healer, String leech, String Defender, int time, int premiumType, String item);
 
 }

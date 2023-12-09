@@ -26,6 +26,7 @@ package com.queuehelper;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.time.ZoneOffset;
 import java.util.List;
 import net.runelite.api.FriendsChatRank;
 import net.runelite.api.events.ChatMessage;
@@ -39,6 +40,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import java.net.URLEncoder;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
 This Class handles all IO communication to the backend
@@ -95,6 +98,10 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 		return BASHTTPClient.client;
 	}
 
+	public void shutdown(){
+		Basclient = null;
+	}
+
 	public void setAPikey(String apikey)
 	{
 		this.apikey = apikey;
@@ -136,22 +143,28 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 	}
 
 	private void updateFilePaths(String[] paths){
-		this.RetrieveCSVQuery = paths[0];
-		this.UPDATE_OPTION_GNC = paths[1];
-		this.UPDATE_OPTION_ATQ = paths[2];
-		this.UPDATE_OPTION_PRI = paths[3];
-		this.UPDATE_OPTION_NAM = paths[4];
-		this.UPDATE_OPTION_FORMI = paths[5];
-		this.UPDATE_OPTION_QN = paths[6];
-		this.csvList = paths[7];
-		this.UPDATE_OPTION_QHN = paths[8];
-		this.UPDATE_OPTION_C = paths[9];
-		this.UPDATE_OPTION_M = paths[10];
-		this.UPDATE_OPTION_R = paths[11];
-		this.OptionQuery = paths[12];
-		this.CustomerNameQuery = paths[13];
-		this.basephp = paths[14];
-		this.CustIDQuery = paths[15];
+		try {
+			this.RetrieveCSVQuery = paths[0];
+			this.UPDATE_OPTION_GNC = paths[1];
+			this.UPDATE_OPTION_ATQ = paths[2];
+			this.UPDATE_OPTION_PRI = paths[3];
+			this.UPDATE_OPTION_NAM = paths[4];
+			this.UPDATE_OPTION_FORMI = paths[5];
+			this.UPDATE_OPTION_QN = paths[6];
+			this.csvList = paths[7];
+			this.UPDATE_OPTION_QHN = paths[8];
+			this.UPDATE_OPTION_C = paths[9];
+			this.UPDATE_OPTION_M = paths[10];
+			this.UPDATE_OPTION_R = paths[11];
+			this.OptionQuery = paths[12];
+			this.CustomerNameQuery = paths[13];
+			this.basephp = paths[14];
+			this.CustIDQuery = paths[15];
+		} catch (Exception e) {
+			e.printStackTrace();
+			//usually fails if invalid apikey but this catch should prevent plugin from crashing on invalid apikey on launhc
+		}
+
 	}
 
 	private String[] getFilePaths() throws IOException {
@@ -349,6 +362,54 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 			.header("msg",chatmessage.getMessage())
 			.header("hash",String.valueOf(hasedMsg))
 			.build();
+
+		client.newCall(request).enqueue(new Callback()
+		{
+			@Override
+			public void onFailure(Call call, IOException e)
+			{
+
+			}
+
+			@Override
+			public void onResponse(Call call, Response response) throws IOException { response.close(); }
+		});
+		return true;
+	}
+
+	@Override
+	public boolean sendRoundTimeServer(String main, String collector, String healer, String leech, String defender, int time, int premiumType, String item) {
+		ZonedDateTime currentTimeUTC = ZonedDateTime.now(ZoneOffset.UTC);
+		int seconds = currentTimeUTC.getSecond();
+		int roundedSeconds = (seconds / 10) * 10; // Round to the nearest 10 seconds for use in the hash/prevent multiple same as discord msgs
+		ZonedDateTime roundedTime = currentTimeUTC.withSecond(roundedSeconds);
+		String roundedTimestampUTC = roundedTime.format(DateTimeFormatter.ISO_DATE_TIME);
+
+		String unhashedMsg = main + collector + healer + leech + defender + roundedTimestampUTC;
+
+		int hasedMsg = unhashedMsg.hashCode();
+
+		OkHttpClient client = Basclient;
+		HttpUrl url = apiBase.newBuilder()
+				.addPathSegment("round")
+				.build();
+
+
+		Request request = new Request.Builder()
+				.header("User-Agent", "RuneLite")
+				.url(url)
+				.header("Content-Type", "application/json")
+				.header("x-api-key", this.apikey)
+				.header("main",main)
+				.header("collector",collector)
+				.header("healer",healer)
+				.header("leech",leech)
+				.header("defender",defender)
+				.header("time", String.valueOf(time))
+				.header("premiumType",String.valueOf(premiumType))
+				.header("item", item)
+				.header("hash",String.valueOf(hasedMsg))
+				.build();
 
 		client.newCall(request).enqueue(new Callback()
 		{
