@@ -512,11 +512,19 @@ public class BASPlugin extends Plugin implements ActionListener
 			{
 				Widget rewardWidget = client.getWidget(WidgetInfo.BA_REWARD_TEXT);
 
-				if (rewardWidget != null && rewardWidget.getText().contains(ENDGAME_REWARD_NEEDLE_TEXT) && gameTime != null && leech)
+				if (rewardWidget != null && rewardWidget.getText().contains(ENDGAME_REWARD_NEEDLE_TEXT) && gameTime != null && leech && isRank())
 				{
-					//gameTime.getPBTime()
-					//sendToServerctionGoesHere
-					this.queue.sendRoundMsd(leader.getText(),player1.getText(),player2.getText(),player3.getText(),player4.getText(),gameTime.getPBTime(),queue.getCustomer(player3.getText()).getPriority(),queue.getCustomer(player3.getText()).getItem());
+
+					if(queue.doesCustExist(player3.getText()))
+					{
+						this.queue.sendRoundMsd(leader.getText(), player1.getText(), player2.getText(), player3.getText(), player4.getText(), gameTime.getPBTime(), queue.getCustomer(player3.getText()).getPriority(), queue.getCustomer(player3.getText()).getItem());
+
+					}
+					else
+					{
+						this.queue.sendRoundMsd(leader.getText(), player1.getText(), player2.getText(), player3.getText(), player4.getText(), gameTime.getPBTime(), "Unknown", "Unknown");
+
+					}
 					gameTime = null;
 					leech = false;
 				}
@@ -562,53 +570,29 @@ public class BASPlugin extends Plugin implements ActionListener
 				log.debug("Player2 is {}", player2.getText());
 				log.debug("Player3 is {}", player3.getText());
 				log.debug("Player4 is {}", player4.getText());
+					scanning = false;
 
 
+					/*for (int i = 8; i < 13; i++)
+					{
+						String player_in_list = (client.getWidget(BaRoleWidget, i).getText());
+						String playerRole = IDfinder(client.getWidget(BaRoleWidget, (i + 10)).getModelId());
+						if (player.compareTo(player_in_list) == 0)//future developers it grabs the name from the string used in this comparison
+						{
+							//this checks which location the name is in the scroll
+							round_roleID = client.getWidget(BaRoleWidget, (i + 10)).getModelId();
+							round_role = IDfinder(round_roleID);
+							log.debug("Your role has been identified as {}", round_role);
+						}
+					}*/
+					if ((leaderIcon.getModelId() == attackerIcon) && (player1Icon.getModelId() == collectorIcon) && (player2Icon.getModelId() == healerIcon) && (player4Icon.getModelId() == defenderIcon))
+					{
 
-/*					String Output = new StringBuilder()
-							.append(leader.getText())
-							.append(",")
-							.append(IDfinder(leaderIcon.getModelId()))
-							.append(",")
-							.append(player1.getText())
-							.append(",")
-							.append(IDfinder(player1Icon.getModelId()))
-							.append(",")
-							.append(player2.getText())
-							.append(",")
-							.append(IDfinder(player2Icon.getModelId()))
-							.append(",")
-							.append(player3.getText())
-							.append(",")
-							.append(IDfinder(player3Icon.getModelId()))
-							.append(",")
-							.append(player4.getText())
-							.append(",")
-							.append(IDfinder(player4Icon.getModelId()))
-							.append(",").toString();*/
-
-				scanning = false;
-
-
-				for (int i = 8; i < 13; i++) {
-					String player_in_list = (client.getWidget(BaRoleWidget, i).getText());
-					String playerRole = IDfinder(client.getWidget(BaRoleWidget, (i+10)).getModelId());
-					if (player.compareTo(player_in_list) == 0){
-						//this checks which location the client is in the scroll
-						round_roleID = client.getWidget(BaRoleWidget, (i+10)).getModelId();
-						round_role = IDfinder(round_roleID);
-						log.debug("Your role has been identified as {}",round_role);
+						log.debug("Leeches {} role identified as {}", player3.getText(), IDfinder(player3Icon.getModelId()));
+						round_role = "Leech " + round_role;
+						log.debug("This has been identified as a leech run as {}",round_role);
+						leech = true;
 					}
-				}
-
-
-
-
-				if((leaderIcon.getModelId() == attackerIcon)&&(player1Icon.getModelId() == collectorIcon)&&(player2Icon.getModelId() == healerIcon)&&(player4Icon.getModelId() == defenderIcon)){
-					round_role = "Leech "+round_role;
-					log.debug("This has been identified as a leech run as {}",round_role);
-					leech = true;
-				}
 
 
 			}

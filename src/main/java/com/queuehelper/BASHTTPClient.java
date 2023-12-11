@@ -391,7 +391,7 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 
 		OkHttpClient client = Basclient;
 		HttpUrl url = apiBase.newBuilder()
-				.addPathSegment("round")
+				.addPathSegment("recordRound")
 				.build();
 
 
@@ -406,7 +406,7 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 				.header("leech",leech)
 				.header("defender",defender)
 				.header("time", String.valueOf(time))
-				.header("premiumType",String.valueOf(premiumType))
+				.header("premiumtype",String.valueOf(premiumType))
 				.header("item", item)
 				.header("hash",String.valueOf(hasedMsg))
 				.build();
