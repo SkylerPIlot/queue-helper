@@ -381,8 +381,8 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 	public boolean sendRoundTimeServer(String main, String collector, String healer, String leech, String defender, int time, int premiumType, String item) {
 		ZonedDateTime currentTimeUTC = ZonedDateTime.now(ZoneOffset.UTC);
 		int seconds = currentTimeUTC.getSecond();
-		int roundedSeconds = (seconds / 10) * 10; // Round to the nearest 10 seconds for use in the hash/prevent multiple same as discord msgs
-		ZonedDateTime roundedTime = currentTimeUTC.withSecond(roundedSeconds);
+		int roundedSeconds = (seconds / 30) * 30; // Round to the nearest 10 seconds for use in the hash/prevent multiple same as discord msgs
+		ZonedDateTime roundedTime = currentTimeUTC.withSecond(roundedSeconds).withNano(0);
 		String roundedTimestampUTC = roundedTime.format(DateTimeFormatter.ISO_DATE_TIME);
 
 		String unhashedMsg = main + collector + healer + leech + defender + roundedTimestampUTC;
