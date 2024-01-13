@@ -153,8 +153,13 @@ public class BASPlugin extends Plugin implements ActionListener
 		{
 			this.basQueuePanel = new BasQueuePanel(this, this.config);
 			this.queue = Queue.getInstance(config.apikey(), basQueuePanel, this, BasHttpClient);
-			navButton = queue.getNav();
-			navButton.setPanel(basQueuePanel);
+			BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/panellogo.png");
+			navButton = NavigationButton.builder()
+				.tooltip("BAS queue + options")
+				.icon(icon)
+				.priority(2)
+				.panel(basQueuePanel)
+				.build();
 			clientToolbar.addNavigation(navButton);
 			SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
 			this.fontSize = config.fontSize();
@@ -505,6 +510,9 @@ public class BASPlugin extends Plugin implements ActionListener
 		SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
 	}
 
+
+
+
 	//All new code here will be with the purpose of scanning for team composition, log team ends, and send data on team completion as part of the plugin
 	@Subscribe
 	public void onWidgetLoaded(WidgetLoaded event) throws IOException//exception required to run .flush()
@@ -552,18 +560,18 @@ public class BASPlugin extends Plugin implements ActionListener
 	{
 
 		if(scanning) {
-			final String player;
-			player = client.getLocalPlayer().getName();
-			leader = client.getWidget(BaRoleWidget,leaderID);
-			leaderIcon = client.getWidget(BaRoleWidget, leadericonID);
-			player1 = client.getWidget(BaRoleWidget,player1ID);
-			player1Icon = client.getWidget(BaRoleWidget,player1iconID);
-			player2 = client.getWidget(BaRoleWidget,player2ID);
-			player2Icon = client.getWidget(BaRoleWidget,player2iconID);
-			player3 = client.getWidget(BaRoleWidget,player3ID);
-			player3Icon = client.getWidget(BaRoleWidget,player3iconID);
-			player4 = client.getWidget(BaRoleWidget, player4ID);
-			player4Icon = client.getWidget(BaRoleWidget, player4iconID);
+				final String player;
+				player = client.getLocalPlayer().getName();
+				leader = client.getWidget(BaRoleWidget, leaderID);
+				leaderIcon = client.getWidget(BaRoleWidget, leadericonID);
+				player1 = client.getWidget(BaRoleWidget, player1ID);
+				player1Icon = client.getWidget(BaRoleWidget, player1iconID);
+				player2 = client.getWidget(BaRoleWidget, player2ID);
+				player2Icon = client.getWidget(BaRoleWidget, player2iconID);
+				player3 = client.getWidget(BaRoleWidget, player3ID);
+				player3Icon = client.getWidget(BaRoleWidget, player3iconID);
+				player4 = client.getWidget(BaRoleWidget, player4ID);
+				player4Icon = client.getWidget(BaRoleWidget, player4iconID);
 			log.debug("Scanning Team");
 
 			if ((player4Icon.getModelId() != leaderIcon.getModelId()) &&  (player4Icon.getModelId() != 65535) && (leaderIcon.getModelId() != 65535)){//this number is the blank icon
@@ -598,9 +606,10 @@ public class BASPlugin extends Plugin implements ActionListener
 					}
 
 
+				}
 			}
 		}
-	}
+
 
 
 	private String IDfinder(int roleID){
