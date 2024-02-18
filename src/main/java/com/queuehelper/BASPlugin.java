@@ -29,8 +29,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Provides;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.time.Instant;
 import java.util.ArrayList;
 import javax.swing.SwingUtilities;
+import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
 import net.runelite.api.widgets.Widget;
@@ -48,13 +51,14 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.Text;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
-
+@Slf4j
 @PluginDescriptor(name = "BAS Queue Helper", description = "BAS Customer CC Info", tags = {"minigame"})
 public class BASPlugin extends Plugin implements ActionListener
 {
@@ -110,8 +114,13 @@ public class BASPlugin extends Plugin implements ActionListener
 		{
 			this.basQueuePanel = new BasQueuePanel(this, this.config);
 			this.queue = Queue.getInstance(config.apikey(), basQueuePanel, this, BasHttpClient);
-			navButton = queue.getNav();
-			navButton.setPanel(basQueuePanel);
+			BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/panellogo.png");
+			navButton = NavigationButton.builder()
+				.tooltip("BAS queue + options")
+				.icon(icon)
+				.priority(2)
+				.panel(basQueuePanel)
+				.build();
 			clientToolbar.addNavigation(navButton);
 			SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
 			this.fontSize = config.fontSize();
@@ -451,5 +460,4 @@ public class BASPlugin extends Plugin implements ActionListener
 		this.refreshQueue();
 		SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
 	}
-
 }
