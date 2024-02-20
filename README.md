@@ -3,4 +3,4 @@ This plug-in is meant to be used by BA Services members to automatically synchro
 
 Note that this plug-in will not do anything without a separate key, handed out to BAS members.
 
-In case of any issues, feel free to contact Furret#0083 on Discord. 
+In case of any issues, feel free to contact Furret on Discord. 
