@@ -37,10 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetID;
-import net.runelite.api.widgets.WidgetInfo;
-import static net.runelite.api.widgets.WidgetInfo.TO_CHILD;
-import static net.runelite.api.widgets.WidgetInfo.TO_GROUP;
+
 import net.runelite.client.chat.ChatColorType;
 import net.runelite.client.chat.ChatMessageBuilder;
 import net.runelite.client.chat.ChatMessageManager;
@@ -514,7 +511,7 @@ public class BASPlugin extends Plugin implements ActionListener
 
 
 	//All new code here will be with the purpose of scanning for team composition, log team ends, and send data on team completion as part of the plugin
-	@Subscribe
+	/*@Subscribe
 	public void onWidgetLoaded(WidgetLoaded event) throws IOException//exception required to run .flush()
 	{
 		switch (event.getGroupId())
@@ -584,7 +581,7 @@ public class BASPlugin extends Plugin implements ActionListener
 					scanning = false;
 
 
-					/*for (int i = 8; i < 13; i++)
+					*//*for (int i = 8; i < 13; i++)
 					{
 						String player_in_list = (client.getWidget(BaRoleWidget, i).getText());
 						String playerRole = IDfinder(client.getWidget(BaRoleWidget, (i + 10)).getModelId());
@@ -595,7 +592,7 @@ public class BASPlugin extends Plugin implements ActionListener
 							round_role = IDfinder(round_roleID);
 							log.debug("Your role has been identified as {}", round_role);
 						}
-					}*/
+					}*//*
 					if ((leaderIcon.getModelId() == attackerIcon) && (player1Icon.getModelId() == collectorIcon) && (player2Icon.getModelId() == healerIcon) && (player4Icon.getModelId() == defenderIcon))
 					{
 
@@ -620,5 +617,5 @@ public class BASPlugin extends Plugin implements ActionListener
 		return "";
 	}
 
-
+*/
 }
