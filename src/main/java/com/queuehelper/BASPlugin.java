@@ -168,7 +168,7 @@ public class BASPlugin extends Plugin implements ActionListener
 	{
 		this.queue.ShouldUpdate(true);
     }
-
+	/* fix later
 	@Subscribe
 	public void onMenuOpened(MenuOpened event)
 	{
@@ -222,7 +222,7 @@ public class BASPlugin extends Plugin implements ActionListener
 				this.basQueuePanel.changeCustomerText(Text.removeTags(Text.toJagexName(player)));
 			});
 	}
-	/* fix later
+	
 	@Subscribe
 	public void onMenuEntryAdded(MenuEntryAdded event)
 	{
@@ -258,7 +258,7 @@ public class BASPlugin extends Plugin implements ActionListener
 				});
 		}
 	}
-
+	*/
 
 	//used in sending discord webhook messages
     private boolean isRank()
@@ -299,7 +299,7 @@ public class BASPlugin extends Plugin implements ActionListener
 		}
 
         queue.updateQueuebackend(csv, name);
-    }*/
+    }
 
     @Subscribe
     public void onChatMessage(ChatMessage chatMessage)
