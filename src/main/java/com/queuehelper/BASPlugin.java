@@ -38,6 +38,7 @@ import net.runelite.api.*;
 import net.runelite.api.events.*;
 import net.runelite.api.widgets.Widget;
 
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.chat.ChatColorType;
 import net.runelite.client.chat.ChatMessageBuilder;
 import net.runelite.client.chat.ChatMessageManager;
@@ -56,7 +57,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
-@Slf4j
+
+import static net.runelite.api.widgets.WidgetInfo.TO_CHILD;
+import static net.runelite.api.widgets.WidgetInfo.TO_GROUP;
+
+	@Slf4j
 @PluginDescriptor(name = "BAS Queue Helper", description = "BAS Customer CC Info", tags = {"minigame"})
 public class BASPlugin extends Plugin implements ActionListener
 {
