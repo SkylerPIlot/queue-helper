@@ -255,8 +255,12 @@ public class BASHTTPClient implements QueueHelperHTTPClient
 					continue;
 				}
 				else{
-					csv.add(new String[] {LineItems[PRIORITY], LineItems[PRIORITY].equals("R") ? LineItems[RNAMES] : LineItems[PNAME], LineItems[STATUS], LineItems[ID], LineItems[ITEM], LineItems[NOTES]});
-				}
+					try {
+						csv.add(new String[]{LineItems[PRIORITY], LineItems[PRIORITY].equals("R") ? LineItems[RNAMES] : LineItems[PNAME], LineItems[STATUS], LineItems[ID], LineItems[ITEM], LineItems[NOTES]});
+					} catch (Exception e) {
+						//throw new RuntimeException(e);
+					}
+					}
 			}
 			response.close();
 			return csv;
