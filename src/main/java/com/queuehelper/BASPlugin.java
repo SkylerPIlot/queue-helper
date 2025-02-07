@@ -261,11 +261,16 @@ public class BASPlugin extends Plugin implements ActionListener
 	*/
 
 	//used in sending discord webhook messages
-    private boolean isRank()
-    {
-        FriendsChatManager clanMemberManager = this.client.getFriendsChatManager();
-        return this.client.getLocalPlayer().getName() != null && clanMemberManager != null && clanMemberManager.getCount() >= 1 && clanMemberManager.getOwner().equals(ccName);
-    }
+	private boolean isRank()
+	{
+		try {
+			FriendsChatManager clanMemberManager = this.client.getFriendsChatManager();
+			return this.client.getLocalPlayer().getName() != null && clanMemberManager != null && clanMemberManager.getCount() >= 1 && clanMemberManager.getOwner().equals(ccName);
+		} catch (Exception e) {
+			return false;
+		}
+
+	}
 
 	//builds a stringbuilder that is then passed to the Implementation of BASHTTPClient to call the backend
     public void updateQueue() throws IOException
