@@ -411,81 +411,22 @@ public class BASPlugin extends Plugin implements ActionListener {
 	}
 
 	//used in BasQueueRow to run the right click options
-	public void markCustomer(int option, Customer cust) {
-		try {
-			if (option == 2) { // mark as Done
-				cust.setStatus("Done");
-				sendChat("Marked " + cust.getName() + " as Done.");
-				queue.exportCSV(); // exports from in-memory data that now includes the manual update
-			}
-			else if (option == 1) { // mark as In Progress
-				cust.setStatus("In Progress");
-				sendChat("Marked " + cust.getName() + " as In Progress.");
-				queue.exportCSV();
-			}
-			else {
+	public void markCustomer(int option, Customer cust)
+	{
+		System.out.print("Attempted to mark: " + cust.getName()+"\n");
+		int UNSUPORRTED = 0;
+		if(option != UNSUPORRTED)
+		{
+			try
+			{
 				queue.mark(option, cust);
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			sendChat("Error updating status for " + cust.getName());
-		}
-// Instead of immediately refreshing from an external source,
-// update the side panel from the current in-memory queue.
-		SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
-	}
-	public void markCustomerForRow(int option, Customer cust) {
-		// Determine the new status based on the option code.
-		String newStatus;
-		switch (option) {
-			case 2:
-				newStatus = "Done";
-				break;
-			case 1:
-				newStatus = "In Progress";
-				break;
-			case 3:
-				newStatus = "Online";
-				break;
-			case 0:
-				newStatus = "";  // Assuming empty means Offline.
-				break;
-			case 4:
-				newStatus = "Cooldown";
-				break;
-			default:
-				newStatus = "";
-		}
-
-		// Update the customer in memory.
-		cust.setStatus(newStatus);
-
-		// Update the backend using the HTTP client.
-		try {
-			boolean success = BASHTTPClient.getInstance(config.apikey(), BasHttpClient)
-					.markCustomer(option, cust.getName());
-			if (!success) {
-				sendChat("Failed to update " + cust.getName() + " via backend.");
-				return;
+			catch (IOException ioException)
+			{
+				ioException.printStackTrace();
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			sendChat("Error updating " + cust.getName() + " via backend.");
-			return;
 		}
-
-		// Re-export the CSV (the entire file) so that S3 gets the updated version.
-		try {
-			queue.exportCSV();
-		} catch (IOException e) {
-			e.printStackTrace();
-			sendChat("Error exporting CSV after updating " + cust.getName());
-			return;
-		}
-
-		sendChat("Marked " + cust.getName() + " as " + newStatus + ".");
-
-		// Refresh the side panel with the updated in-memory queue.
+		this.refreshQueue();
 		SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
 	}
 

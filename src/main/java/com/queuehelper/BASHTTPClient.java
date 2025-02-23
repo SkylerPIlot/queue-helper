@@ -196,26 +196,10 @@
 			}
 		}
 		@Override
+		@Deprecated
 		public String getCustomerID(String name) throws IOException
 		{
-			OkHttpClient client = Basclient;
-			HttpUrl url = apiBase.newBuilder()
-					.addPathSegment("bas")
-					.addPathSegment(basephp)
-					.addQueryParameter(CustIDQuery, URLEncoder.encode(name.replace(' ', ' '),"UTF-8"))
-					.build();
-
-			Request request = new Request.Builder()
-					.header("User-Agent", "RuneLite")
-					.url(url)
-					.header("Content-Type", "application/json")
-					.header("x-api-key", this.apikey)
-					.build();
-
-			try (Response response = client.newCall(request).execute())
-			{
-				return response.body().string();
-			}
+			return "null";//please use another method to get ID this is not useful anymore
 
 		}
 		@Override
@@ -223,23 +207,38 @@
 		{
 			OkHttpClient client = Basclient;
 			HttpUrl url = apiBase.newBuilder()
-					.addPathSegment("bas")
-					.addPathSegment(basephp)
-					.addQueryParameter(OptionQuery, option + "")
-					.addQueryParameter(CustomerNameQuery, URLEncoder.encode(Text.removeTags(Text.sanitize(name)).replace(' ', ' '),"UTF-8"))
+					.addPathSegment("queue")
 					.build();
+
+			/*
+				3 == offline
+				0 == cooldown
+				2 == done
+				1 == in progress
+			}*/
+
 
 			Request request = new Request.Builder()
 					.header("User-Agent", "RuneLite")
 					.url(url)
 					.header("Content-Type", "application/json")
 					.header("x-api-key", this.apikey)
+					.header("username",name)
+					.header("action", String.valueOf(option))
 					.build();
 
-			try (Response response = client.newCall(request).execute())
+			client.newCall(request).enqueue(new Callback()
 			{
-				return response.isSuccessful();
-			}
+				@Override
+				public void onFailure(Call call, IOException e)
+				{
+
+				}
+
+				@Override
+				public void onResponse(Call call, Response response) throws IOException { response.close(); }
+			});
+			return true;
 
 		}
 		@Override
@@ -360,7 +359,7 @@
 			return "queue.csv";
 		}
 
-		@Override
+		@Override//TODO make this work(L0l)
 		public boolean addCustomer(String itemName, String priority, String custName, String addedBy) throws IOException
 		{
 			OkHttpClient client = Basclient;
