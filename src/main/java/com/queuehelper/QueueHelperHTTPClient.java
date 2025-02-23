@@ -46,7 +46,7 @@ public interface QueueHelperHTTPClient
 
 	public String getCustomerID(String name) throws IOException;
 
-	public boolean markCustomer(int option, String name) throws IOException;
+	public boolean markCustomer(int option, String name, String rankname) throws IOException;
 
 	public List<String[]> readCSV(List<String[]> csv) throws IOException;//Please pay close attention to how the queue object expects the customer name/id and so forth. A small quirk is it expect cooldown status to be present in the "notes" part of the customer
 

@@ -203,7 +203,7 @@
 
 		}
 		@Override
-		public boolean markCustomer(int option, String name) throws IOException
+		public boolean markCustomer(int option, String name,String rankName) throws IOException
 		{
 			OkHttpClient client = Basclient;
 			HttpUrl url = apiBase.newBuilder()
@@ -225,6 +225,7 @@
 					.header("x-api-key", this.apikey)
 					.header("username",name)
 					.header("action", String.valueOf(option))
+					.header("rankname", rankName)
 					.build();
 
 			client.newCall(request).enqueue(new Callback()

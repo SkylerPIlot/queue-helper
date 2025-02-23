@@ -419,7 +419,7 @@ public class BASPlugin extends Plugin implements ActionListener {
 		{
 			try
 			{
-				queue.mark(option, cust);
+				queue.mark(option, cust, client.getLocalPlayer().getName());
 			}
 			catch (IOException ioException)
 			{
