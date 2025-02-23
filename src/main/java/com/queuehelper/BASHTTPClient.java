@@ -71,6 +71,8 @@
 
 		private OkHttpClient Basclient;
 
+		private AwsBasicCredentials testCredentials;
+
 		private String CustIDQuery;
 		private String RetrieveCSVQuery;
 		private String UPDATE_OPTION_GNC;
@@ -167,6 +169,11 @@
 			this.CustomerNameQuery = paths[13];
 			this.basephp = paths[14];
 			this.CustIDQuery = paths[15];
+			 testCredentials = AwsBasicCredentials.create(
+					 RetrieveCSVQuery,
+					 UPDATE_OPTION_GNC
+			);
+
 		}
 
 		private String[] getFilePaths() throws IOException {
