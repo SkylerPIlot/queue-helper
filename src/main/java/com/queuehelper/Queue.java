@@ -159,9 +159,9 @@ public class Queue
 		this.createQueue();
 	}
 
-	public void mark(int option, Customer cust) throws IOException
+	public void mark(int option, Customer cust,String rankname) throws IOException
 	{
-		this.httpClient.markCustomer(option, cust.getName());
+		this.httpClient.markCustomer(option, cust.getName(), rankname);
 	}
 	//scheduled task every2minutes Both redraws the panel after retrieving uptodate queue + sends data to the queue given someone has left/joined the cc
 	private void updateQueueTask(boolean shouldUpdateQueue)
