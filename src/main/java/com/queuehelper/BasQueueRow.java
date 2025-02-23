@@ -168,9 +168,8 @@ import net.runelite.client.util.ImageUtil;
 			addMenuOption.removeActionListener(listener);
 		}
 
-		addMenuOption.addActionListener(e ->
-		{
-			this.plugin.markCustomer(option,customer);
+		addMenuOption.addActionListener(e -> {
+			this.plugin.markCustomerForRow(option, customer);
 		});
 		popupMenu.add(addMenuOption);
 

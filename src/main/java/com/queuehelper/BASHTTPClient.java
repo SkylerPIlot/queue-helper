@@ -23,11 +23,16 @@
 	 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	 */
 	package com.queuehelper;
-	/* !!! All of the new import options are added below with a tab to identify them*/
+	import okhttp3.FormBody;
+	import java.util.List;
+	import java.util.ArrayList;
 	import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 	import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 	import software.amazon.awssdk.services.s3.S3Client;
 	import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+	import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+	import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+	import software.amazon.awssdk.core.ResponseInputStream;
 	import software.amazon.awssdk.core.sync.RequestBody;
 	import software.amazon.awssdk.regions.Region;
 	import java.nio.charset.StandardCharsets;
@@ -231,52 +236,64 @@
 
 		}
 		@Override
-		public List<String[]> readCSV(List<String[]> csv) throws IOException{
+		public List<String[]> readCSV(List<String[]> csv) throws IOException {
+			// Define the bucket and key for the CSV file in the forwarded folder
+			String bucketName = "rl2qdatatestcsv";
+			String key = "rl2q forwarded data/queue.csv";
 
-			int PRIORITY = 2;
-			int RNAMES = 4;
-			int PNAME = 3;
-			int STATUS = 0;
-			int ID = 1;
-			int ITEM = 5;
-			int NOTES = 7;
-			OkHttpClient client = Basclient;
-			HttpUrl url = apiBase.newBuilder()
-					.addPathSegment("bas")
-					.addPathSegment(basephp)
-					.addQueryParameter(RetrieveCSVQuery, "1")
-					.build();
 
-			Request request = new Request.Builder()
-					.header("User-Agent", "RuneLite")
-					.url(url)
-					.header("Content-Type", "application/json")
-					.header("x-api-key", this.apikey)
-					.build();
+			// Create an S3 client to retrieve the object
+			try (S3Client s3 = S3Client.builder()
+					.region(Region.EU_WEST_2)
+					.credentialsProvider(StaticCredentialsProvider.create(testCredentials))
+					.build()) {
 
-			try (Response response = client.newCall(request).execute())
-			{
-				csv.clear();
+				GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+						.bucket(bucketName)
+						.key(key)
+						.build();
 
-				String[] CSVLines = response.body().string().split("\n");
-				for(String line : CSVLines ){
-					String[] LineItems = line.split(",");
-					if(LineItems[0].equals("Current time:") || LineItems[0].equals("Last edited:") || LineItems[0].equals("Status")){
-						continue;
-					}
-					else{
-						try {
-							csv.add(new String[]{LineItems[PRIORITY], LineItems[PRIORITY].equals("R") ? LineItems[RNAMES] : LineItems[PNAME], LineItems[STATUS], LineItems[ID], LineItems[ITEM], LineItems[NOTES]});
-						} catch (Exception e) {
-							//throw new RuntimeException(e);
+				try (ResponseInputStream<GetObjectResponse> s3Object = s3.getObject(getObjectRequest)) {
+					// Read the CSV content as a String (assumes UTF-8 encoding)
+					String csvContent = new String(s3Object.readAllBytes(), StandardCharsets.UTF_8);
+
+					// Clear the provided list (which may be used by your side panel update)
+					csv.clear();
+					String[] CSVLines = csvContent.split("\n");
+
+					// Process each line from the CSV
+					for (String line : CSVLines) {
+						// Skip header lines (assuming the header starts with "Priority")
+						if (line.trim().startsWith("Priority")) {
+							continue;
 						}
-					}
-				}
-				response.close();
-				return csv;
-			}
 
+						// Split the line on commas
+						String[] LineItems = line.split(",");
+
+						// Make sure we have at least 6 columns (one for each field)
+						if (LineItems.length < 6) {
+							continue;
+						}
+
+						// Trim values to remove any extra whitespace
+						String priority = LineItems[0].trim();
+						String customerName = LineItems[1].trim();
+						String status = LineItems[2].trim();
+						String id = LineItems[3].trim();
+						String item = LineItems[4].trim();
+						String notes = LineItems[5].trim();
+
+						// Add the row to the CSV list that will update the side panel
+						csv.add(new String[]{priority, customerName, status, id, item, notes});
+					}
+					return csv;
+				}
+			} catch (Exception e) {
+				throw new IOException("Error fetching CSV from S3: " + e.getMessage(), e);
+			}
 		}
+
 
 		@Override
 		public NavigationButton getNavButton()
@@ -309,6 +326,7 @@
 			// Set your test credentials (only for testing; do not hardcode in production)
 
 			//TODO Credentials go here
+
 			try (S3Client s3 = S3Client.builder()
 					.region(Region.EU_WEST_2)
 					.credentialsProvider(StaticCredentialsProvider.create(testCredentials))
@@ -339,21 +357,34 @@
 		public boolean addCustomer(String itemName, String priority, String custName, String addedBy) throws IOException
 		{
 			OkHttpClient client = Basclient;
-			HttpUrl url = apiBase.newBuilder()
-					.addPathSegment("bas")
-					.addPathSegment(basephp)
-					.addQueryParameter(UPDATE_OPTION_ATQ, "1")
-					.addQueryParameter(UPDATE_OPTION_PRI, priority)
-					.addQueryParameter(UPDATE_OPTION_NAM, URLEncoder.encode(custName.replace(' ', ' '), "UTF-8"))
-					.addQueryParameter(UPDATE_OPTION_FORMI, itemName)
-					.addQueryParameter(UPDATE_OPTION_QN, addedBy)
+
+			// Build the URL for your Google Form submission.
+			HttpUrl url = new HttpUrl.Builder()
+					.scheme("https")
+					.host("docs.google.com")
+					.addPathSegment("forms")
+					.addPathSegment("d")
+					.addPathSegment("e")
+					// Replace with your actual Google Form ID from the URL:
+					// https://docs.google.com/forms/d/e/1FAIpQLSc06_IrTbleP0uZBiOt1yMcI5kvOrvkzgaVLLmEDRLqJSSoVg/viewform
+					.addPathSegment("1FAIpQLSc06_IrTbleP0uZBiOt1yMcI5kvOrvkzgaVLLmEDRLqJSSoVg")
+					.addPathSegment("formResponse")
 					.build();
 
+			// Build the form-encoded request body with the proper entry IDs.
+			okhttp3.RequestBody formBody = new FormBody.Builder()
+					.add("entry.1481518570", priority)
+					.add("entry.1794472797", custName)
+					.add("entry.1391010025", itemName)
+					.add("entry.1284888696", addedBy)
+					.add("entry.1260617128", formsource)
+					.build();
+
+			// Create a POST request to the Google Form.
 			Request request = new Request.Builder()
-					.header("User-Agent", "RuneLite")
 					.url(url)
-					.header("Content-Type", "application/json")
-					.header("x-api-key", this.apikey)
+					.post(formBody)
+					.header("User-Agent", "RuneLite")
 					.build();
 
 			try (Response response = client.newCall(request).execute())
@@ -361,6 +392,7 @@
 				return response.isSuccessful();
 			}
 		}
+		private static final String formsource = "BASPlugin";
 
 		@Override
 		public boolean sendChatMsgDiscord(ChatMessage chatmessage) throws IOException

@@ -79,7 +79,7 @@ public class Queue
 				updateQueueTask(ShouldUpdate());
 			}
 		};
-		timer.scheduleAtFixedRate(this.updateQueue,new Date(),120000);//Schedules a task every 2minutes to both refresh queue object + upload the cc data -> backend
+		timer.scheduleAtFixedRate(this.updateQueue,new Date(),12000);//Schedules a task every 2minutes to both refresh queue object + upload the cc data -> backend
 	}
 
 	public static Queue getInstance(String apikey, BasQueuePanel BasPanel, BASPlugin basPlugin,OkHttpClient rlhttp) throws IOException //Singleton queue creation should only need one queue per plugin
@@ -217,4 +217,24 @@ public class Queue
 		}
 	}
 
+	public void exportCSV() throws IOException {
+		StringBuilder csvBuilder = new StringBuilder();
+		// Optional header row
+		csvBuilder.append("Priority,Customer,Status,ID,Item,Notes\n");
+
+		// Assuming CurrentQueue is declared as, for example:
+		// private LinkedHashMap<String, Customer> CurrentQueue;
+		for (Customer cust : this.CurrentQueue.values()) {
+			csvBuilder.append(cust.getPriority()).append(",")
+					.append(cust.getName()).append(",")
+					.append(cust.getStatus()).append(",")
+					.append(cust.getID()).append(",")
+					.append(cust.getItem()).append(",")
+					.append(cust.getNotes()).append("\n");
+		}
+
+		// Upload the new CSV to S3 using your existing method.
+		// For example:
+		httpClient.updateQueuebackend(csvBuilder, "queue.csv");
+	}
 }

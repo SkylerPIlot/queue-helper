@@ -56,13 +56,12 @@ import javax.inject.Inject;
 import java.io.IOException;
 @Slf4j
 @PluginDescriptor(name = "BAS Queue Helper", description = "BAS Customer CC Info", tags = {"minigame"})
-public class BASPlugin extends Plugin implements ActionListener
-{
-    private static final Logger log = LoggerFactory.getLogger(BASPlugin.class);
+public class BASPlugin extends Plugin implements ActionListener {
+	private static final Logger log = LoggerFactory.getLogger(BASPlugin.class);
 
-    private static final String ccName = "Ba Services";
+	private static final String ccName = "Ba Services";
 
-    private static final String errorMsg = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("BAS QH: ").append(ChatColorType.HIGHLIGHT).append("Please Paste the API key in the plugin settings and restart the plugin").build();
+	private static final String errorMsg = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append("BAS QH: ").append(ChatColorType.HIGHLIGHT).append("Please Paste the API key in the plugin settings and restart the plugin").build();
 
 	private BasQueuePanel basQueuePanel;
 	private NavigationButton navButton;
@@ -77,14 +76,14 @@ public class BASPlugin extends Plugin implements ActionListener
 
 	private BASHTTPClient httpclient;
 
-    @Inject
-    private Client client;
+	@Inject
+	private Client client;
 
-    @Inject
-    private ChatMessageManager chatMessageManager;
+	@Inject
+	private ChatMessageManager chatMessageManager;
 
-    @Inject
-    private BASConfig config;
+	@Inject
+	private BASConfig config;
 
 	@Inject
 	private OkHttpClient BasHttpClient;
@@ -92,82 +91,74 @@ public class BASPlugin extends Plugin implements ActionListener
 	@Inject
 	private ClientToolbar clientToolbar;
 
-	public BASPlugin() throws IOException
-	{
+	public BASPlugin() throws IOException {
 	}
 
 	@Provides
-    BASConfig provideConfig(ConfigManager configManager)
-    {
-        return configManager.getConfig(BASConfig.class);
-    }
+	BASConfig provideConfig(ConfigManager configManager) {
+		return configManager.getConfig(BASConfig.class);
+	}
 
 	private Queue queue;
 
-    protected void startUp() throws Exception
-    {
-    	if(!isConfigApiEmpty())
-		{
+	protected void startUp() throws Exception {
+		if (!isConfigApiEmpty()) {
 			this.basQueuePanel = new BasQueuePanel(this, this.config);
 			this.queue = Queue.getInstance(config.apikey(), basQueuePanel, this, BasHttpClient);
 			BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/panellogo.png");
 			navButton = NavigationButton.builder()
-				.tooltip("BAS queue + options")
-				.icon(icon)
-				.priority(2)
-				.panel(basQueuePanel)
-				.build();
+					.tooltip("BAS queue + options")
+					.icon(icon)
+					.priority(2)
+					.panel(basQueuePanel)
+					.build();
 			clientToolbar.addNavigation(navButton);
 			SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
 			this.fontSize = config.fontSize();
 		}
-    }
+	}
 
-    protected void shutDown() throws Exception
-    {
+	protected void shutDown() throws Exception {
 		clientToolbar.removeNavigation(navButton);
 		this.queue = null;
 		httpclient = null;
 
-    }
+	}
 
 
 	//checks on startup of plugin and throws an error
-    private boolean isConfigApiEmpty(){
+	private boolean isConfigApiEmpty() {
 
-        if(config.apikey().equals("Paste your key here") || config.apikey().equals("")){
+		if (config.apikey().equals("Paste your key here") || config.apikey().equals("")) {
 
-            BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
-                    .type(ChatMessageType.CONSOLE)
-                    .runeLiteFormattedMessage(errorMsg)
-                    .build());
+			BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
+					.type(ChatMessageType.CONSOLE)
+					.runeLiteFormattedMessage(errorMsg)
+					.build());
 			client.getAccountHash();
-            return true;
+			return true;
 
-        }
-        return false;
+		}
+		return false;
 
-    }
+	}
 
-
-    @Subscribe
-    public void onConfigChanged(ConfigChanged event) throws IOException
-	{
-		this.fontSize = config.fontSize();
-    }
 
 	@Subscribe
-	public void onFriendsChatMemberJoined(FriendsChatMemberJoined event) throws IOException
-	{
+	public void onConfigChanged(ConfigChanged event) throws IOException {
+		this.fontSize = config.fontSize();
+	}
+
+	@Subscribe
+	public void onFriendsChatMemberJoined(FriendsChatMemberJoined event) throws IOException {
 		this.queue.ShouldUpdate(true);
 	}
 
 
-    @Subscribe
-    public void onFriendsChatMemberLeft(FriendsChatMemberLeft event) throws IOException
-	{
+	@Subscribe
+	public void onFriendsChatMemberLeft(FriendsChatMemberLeft event) throws IOException {
 		this.queue.ShouldUpdate(true);
-    }
+	}
 	/* fix later
 	@Subscribe
 	public void onMenuOpened(MenuOpened event)
@@ -261,8 +252,7 @@ public class BASPlugin extends Plugin implements ActionListener
 	*/
 
 	//used in sending discord webhook messages
-	private boolean isRank()
-	{
+	private boolean isRank() {
 		try {
 			FriendsChatManager clanMemberManager = this.client.getFriendsChatManager();
 			return this.client.getLocalPlayer().getName() != null && clanMemberManager != null && clanMemberManager.getCount() >= 1 && clanMemberManager.getOwner().equals(ccName);
@@ -273,100 +263,84 @@ public class BASPlugin extends Plugin implements ActionListener
 	}
 
 	//builds a stringbuilder that is then passed to the Implementation of BASHTTPClient to call the backend
-    public void updateQueue() throws IOException
-	{
-		if(!isRank()){
+	public void updateQueue() throws IOException {
+		if (!isRank()) {
 			return;
 		}
-        FriendsChatManager clanMemberManager = this.client.getFriendsChatManager();
-        if (!this.config.autoUpdateQueue() || clanMemberManager == null)
-            return;
-        StringBuilder csv = new StringBuilder();
-        for (FriendsChatMember member : (FriendsChatMember[]) clanMemberManager.getMembers())
-        {
-            String memberName = member.getName();
-            if (csv.toString().equals(""))
-            {
-                csv = new StringBuilder(memberName + "#" + member.getRank().getValue());
-            } else
-            {
-                csv.append(",").append(memberName).append("#").append(member.getRank().getValue());
-            }
-        }
-        if (csv.toString().equals(""))
-            return;
-        if (isConfigApiEmpty()){
-            return;
-        }
-        String name = config.queueName();
-        if(client.getLocalPlayer().getName() != null){
+		FriendsChatManager clanMemberManager = this.client.getFriendsChatManager();
+		if (!this.config.autoUpdateQueue() || clanMemberManager == null)
+			return;
+		StringBuilder csv = new StringBuilder();
+		for (FriendsChatMember member : (FriendsChatMember[]) clanMemberManager.getMembers()) {
+			String memberName = member.getName();
+			if (csv.toString().equals("")) {
+				csv = new StringBuilder(memberName + "#" + member.getRank().getValue());
+			} else {
+				csv.append(",").append(memberName).append("#").append(member.getRank().getValue());
+			}
+		}
+		if (csv.toString().equals(""))
+			return;
+		if (isConfigApiEmpty()) {
+			return;
+		}
+		String name = config.queueName();
+		if (client.getLocalPlayer().getName() != null) {
 			name = Text.sanitize(client.getLocalPlayer().getName());
 		}
 
-        queue.updateQueuebackend(csv, name);
-    }
+		queue.updateQueuebackend(csv, name);
+	}
 
-    @Subscribe
-    public void onChatMessage(ChatMessage chatMessage)
-    {
-		if(!isRank() || chatMessage.getType() != ChatMessageType.FRIENDSCHAT)
-		{
+	@Subscribe
+	public void onChatMessage(ChatMessage chatMessage) {
+		if (!isRank() || chatMessage.getType() != ChatMessageType.FRIENDSCHAT) {
 			return;
 		}
 
 		FriendsChatRank rank = getRank(chatMessage.getName());
-		if (isConfigApiEmpty()){
+		if (isConfigApiEmpty()) {
 			return;
 		}//TODO fix hanging
 
-		try{
+		try {
 			int numMsg = (int) chatMessage.getMessage().charAt(0);
-			if((48 <= numMsg && numMsg <= 53) && (chatMessage.getMessage().contains("out") || chatMessage.getMessage().contains("f") || chatMessage.getMessage().contains("a") || chatMessage.getMessage().contains("*") || chatMessage.getMessage().contains("c") || chatMessage.getMessage().contains("d") || chatMessage.getMessage().contains("h") || (chatMessage.getMessage().contains("r") && !chatMessage.getMessage().contains("reg"))))
-			{
-				if(48 <= ((int) chatMessage.getMessage().charAt(1)) && ((int) chatMessage.getMessage().charAt(1)) <= 57){
+			if ((48 <= numMsg && numMsg <= 53) && (chatMessage.getMessage().contains("out") || chatMessage.getMessage().contains("f") || chatMessage.getMessage().contains("a") || chatMessage.getMessage().contains("*") || chatMessage.getMessage().contains("c") || chatMessage.getMessage().contains("d") || chatMessage.getMessage().contains("h") || (chatMessage.getMessage().contains("r") && !chatMessage.getMessage().contains("reg")))) {
+				if (48 <= ((int) chatMessage.getMessage().charAt(1)) && ((int) chatMessage.getMessage().charAt(1)) <= 57) {
 					msgIn = false;
-				}
-				else{
+				} else {
 					msgIn = true;
 				}
 			}
-		}
-		catch (NumberFormatException ex){
+		} catch (NumberFormatException ex) {
 			log.debug("Normal behavior");
 		}
 
 
-		try{
+		try {
 			int numMsg = Integer.parseInt(chatMessage.getMessage());
-			if(0 <= numMsg  && numMsg <= 5)
-			{
+			if (0 <= numMsg && numMsg <= 5) {
 				msgIn = true;
 			}
-		}
-		catch (NumberFormatException ex){
+		} catch (NumberFormatException ex) {
 			log.debug("Normal behavior");
 		}
 
-		if (chatMessage.getMessage().toLowerCase().contains("t+") || chatMessage.getMessage().toLowerCase().contains("-=-=") || chatMessage.getMessage().toLowerCase().contains("---") || chatMessage.getMessage().toLowerCase().contains("===") || chatMessage.getMessage().toLowerCase().equals("jf") || chatMessage.getMessage().toLowerCase().equals("out")){
+		if (chatMessage.getMessage().toLowerCase().contains("t+") || chatMessage.getMessage().toLowerCase().contains("-=-=") || chatMessage.getMessage().toLowerCase().contains("---") || chatMessage.getMessage().toLowerCase().contains("===") || chatMessage.getMessage().toLowerCase().equals("jf") || chatMessage.getMessage().toLowerCase().equals("out")) {
 			msgIn = true;
 		}
 
 
-
-
-		if (((chatMessage.getMessage().contains("+") && chatMessage.getMessage().charAt(0) == '+') || msgIn) && !chatMessage.getMessage().toLowerCase().contains("@"))
-		{
+		if (((chatMessage.getMessage().contains("+") && chatMessage.getMessage().charAt(0) == '+') || msgIn) && !chatMessage.getMessage().toLowerCase().contains("@")) {
 			msgIn = false;
 			queue.sendChatMsgDiscord(chatMessage);
 
 
-
 		}
-	//TODO implement webhook + blairm messages + retrieving and using reuls from the AWS server
-    }
+		//TODO implement webhook + blairm messages + retrieving and using reuls from the AWS server
+	}
 
-	private FriendsChatRank getRank(String playerName)
-	{
+	private FriendsChatRank getRank(String playerName) {
 		FriendsChatManager friendsChatManager = this.client.getFriendsChatManager();
 		if (friendsChatManager == null)
 			return FriendsChatRank.UNRANKED;
@@ -376,89 +350,143 @@ public class BASPlugin extends Plugin implements ActionListener
 
 
 	@Override
-	public void actionPerformed(ActionEvent e)
-	{
+	public void actionPerformed(ActionEvent e) {
 		//required, didn't feel like using instead used specific functions
 	}
 
 	//used in BasQueueRow to run the "Next" button
-	public void getNext(){
-    	Customer next = queue.getNext();
-    	if (next == null) {
-    		sendChat("queue empty");
-    		return;
+	public void getNext() {
+		Customer next = queue.getNext();
+		if (next == null) {
+			sendChat("queue empty");
+			return;
 		}
 		sendChat("Next customer in line: Priority " + next.getPriority() + " " + next.getName() + " " + next.getItem() + " " + next.getNotes());
 	}
 
-	public void sendChat(String msg){
+	public void sendChat(String msg) {
 		String chatMessage = (new ChatMessageBuilder()).append(ChatColorType.NORMAL).append(msg).build();
-    	BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
-			.type(ChatMessageType.CONSOLE)
-			.runeLiteFormattedMessage(chatMessage)
-			.build());
+		BASPlugin.this.chatMessageManager.queue(QueuedMessage.builder()
+				.type(ChatMessageType.CONSOLE)
+				.runeLiteFormattedMessage(chatMessage)
+				.build());
 	}
 
 	//Adds a customer to the queue and is called by the addcustomer button in the basQueuePanel
-	public void addToQueue(String name, String item, String priority){
-    	if(name.equals("Customer")){
-    		sendChat("Please enter a name");
-    		return;
+	public void addToQueue(String name, String item, String priority) {
+		if (name.equals("Customer")) {
+			sendChat("Please enter a name");
+			return;
 		}
-    	if(queue.addToQueue(item, priority, name, config.queueName())){
-    		sendChat("Added: " + name + " for " + priority + " " + item);
+		if (queue.addToQueue(item, priority, name, config.queueName())) {
+			sendChat("Added: " + name + " for " + priority + " " + item);
 
-		}
-    	else{
+		} else {
 			sendChat("Failed to add: " + name + " for " + priority + " " + item);
 		}
 		refreshQueue();
 
 	}
+
 	//used in BasQueueRow to run the "Refresh" button
-	public void refreshQueue()
-	{
+	public void refreshQueue() {
 		//creates a list of online nonranks to update a autocomplete function
-		if(client.getGameState() == GameState.LOGGED_IN)
-		{
+		if (client.getGameState() == GameState.LOGGED_IN) {
 			FriendsChatManager clanMemberManager = this.client.getFriendsChatManager();
 			FriendsChatMember[] memberlist = clanMemberManager.getMembers();
 			ArrayList<String> keywords = new ArrayList<>();
-			for (FriendsChatMember member : memberlist)
-			{
-				if (member.getRank() == FriendsChatRank.UNRANKED && !queue.doesCustExist(member.getName()))
-				{
+			for (FriendsChatMember member : memberlist) {
+				if (member.getRank() == FriendsChatRank.UNRANKED && !queue.doesCustExist(member.getName())) {
 					keywords.add(member.getName());
 				}
 			}
 			basQueuePanel.setAutoCompleteKeyWords(keywords);
 		}
-		try
-		{
+		try {
 			queue.refresh();
-		}
-		catch (IOException ioException)
-		{
+		} catch (IOException ioException) {
 			ioException.printStackTrace();
 		}
 		SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
 	}
+
 	//used in BasQueueRow to run the right click options
-	public void markCustomer(int option, Customer cust)
-	{
-		int UNSUPORRTED = 0;
-		if(option != UNSUPORRTED)
-		{
-			try
-			{
+	public void markCustomer(int option, Customer cust) {
+		try {
+			if (option == 2) { // mark as Done
+				cust.setStatus("Done");
+				sendChat("Marked " + cust.getName() + " as Done.");
+				queue.exportCSV(); // exports from in-memory data that now includes the manual update
+			}
+			else if (option == 1) { // mark as In Progress
+				cust.setStatus("In Progress");
+				sendChat("Marked " + cust.getName() + " as In Progress.");
+				queue.exportCSV();
+			}
+			else {
 				queue.mark(option, cust);
 			}
-			catch (IOException ioException)
-			{
-				ioException.printStackTrace();
-			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			sendChat("Error updating status for " + cust.getName());
 		}
-		this.refreshQueue();
+// Instead of immediately refreshing from an external source,
+// update the side panel from the current in-memory queue.
 		SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
 	}
+	public void markCustomerForRow(int option, Customer cust) {
+		// Determine the new status based on the option code.
+		String newStatus;
+		switch (option) {
+			case 2:
+				newStatus = "Done";
+				break;
+			case 1:
+				newStatus = "In Progress";
+				break;
+			case 3:
+				newStatus = "Online";
+				break;
+			case 0:
+				newStatus = "";  // Assuming empty means Offline.
+				break;
+			case 4:
+				newStatus = "Cooldown";
+				break;
+			default:
+				newStatus = "";
+		}
+
+		// Update the customer in memory.
+		cust.setStatus(newStatus);
+
+		// Update the backend using the HTTP client.
+		try {
+			boolean success = BASHTTPClient.getInstance(config.apikey(), BasHttpClient)
+					.markCustomer(option, cust.getName());
+			if (!success) {
+				sendChat("Failed to update " + cust.getName() + " via backend.");
+				return;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			sendChat("Error updating " + cust.getName() + " via backend.");
+			return;
+		}
+
+		// Re-export the CSV (the entire file) so that S3 gets the updated version.
+		try {
+			queue.exportCSV();
+		} catch (IOException e) {
+			e.printStackTrace();
+			sendChat("Error exporting CSV after updating " + cust.getName());
+			return;
+		}
+
+		sendChat("Marked " + cust.getName() + " as " + newStatus + ".");
+
+		// Refresh the side panel with the updated in-memory queue.
+		SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
+	}
+
 }
