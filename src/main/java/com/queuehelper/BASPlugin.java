@@ -274,9 +274,9 @@ public class BASPlugin extends Plugin implements ActionListener {
 		for (FriendsChatMember member : (FriendsChatMember[]) clanMemberManager.getMembers()) {
 			String memberName = member.getName();
 			if (csv.toString().equals("")) {
-				csv = new StringBuilder(memberName + "#" + member.getRank().getValue());
+				csv = new StringBuilder(memberName);
 			} else {
-				csv.append(",").append(memberName).append("#").append(member.getRank().getValue());
+				csv.append(",").append(memberName);
 			}
 		}
 		if (csv.toString().equals(""))
@@ -288,7 +288,7 @@ public class BASPlugin extends Plugin implements ActionListener {
 		if (client.getLocalPlayer().getName() != null) {
 			name = Text.sanitize(client.getLocalPlayer().getName());
 		}
-
+		//System.out.print(csv.toString() + '\n');
 		queue.updateQueuebackend(csv, name);
 	}
 

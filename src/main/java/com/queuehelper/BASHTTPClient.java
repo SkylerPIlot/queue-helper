@@ -23,37 +23,27 @@
 	 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	 */
 	package com.queuehelper;
+	import jdk.internal.org.jline.utils.InputStreamReader;
 	import okhttp3.FormBody;
+
+
 	import java.util.List;
 	import java.util.ArrayList;
-	import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-	import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-	import software.amazon.awssdk.services.s3.S3Client;
-	import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-	import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-	import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-	import software.amazon.awssdk.core.ResponseInputStream;
-	import software.amazon.awssdk.core.sync.RequestBody;
-	import software.amazon.awssdk.regions.Region;
-	import java.nio.charset.StandardCharsets;
-	import java.time.LocalDateTime;
-	import java.time.format.DateTimeFormatter;
+
 	import java.io.IOException;
 	import java.awt.image.BufferedImage;
-	import java.io.IOException;
-	import java.util.List;
-	import net.runelite.api.FriendsChatRank;
+
 	import net.runelite.api.events.ChatMessage;
 	import net.runelite.client.ui.NavigationButton;
 	import net.runelite.client.util.ImageUtil;
-	import net.runelite.client.util.Text;
+
 	import okhttp3.Call;
 	import okhttp3.Callback;
 	import okhttp3.HttpUrl;
 	import okhttp3.OkHttpClient;
 	import okhttp3.Request;
 	import okhttp3.Response;
-	import java.net.URLEncoder;
+
 
 	/**
 	 This Class handles all IO communication to the backend
@@ -71,9 +61,8 @@
 
 		private OkHttpClient Basclient;
 
-		private AwsBasicCredentials testCredentials;
-
 		private String CustIDQuery;
+		private List<String[]> csvData;
 		private String RetrieveCSVQuery;
 		private String UPDATE_OPTION_GNC;
 		private String UPDATE_OPTION_ATQ;
@@ -120,6 +109,8 @@
 
 		public void clearFilePaths(){
 			RetrieveCSVQuery = "";
+
+			csvData = null;
 
 			UPDATE_OPTION_GNC = "";
 
@@ -169,10 +160,7 @@
 			this.CustomerNameQuery = paths[13];
 			this.basephp = paths[14];
 			this.CustIDQuery = paths[15];
-			 testCredentials = AwsBasicCredentials.create(
-					 RetrieveCSVQuery,
-					 UPDATE_OPTION_GNC
-			);
+
 
 		}
 
@@ -237,69 +225,12 @@
 				}
 
 				@Override
-				public void onResponse(Call call, Response response) throws IOException { response.close(); }
+				public void onResponse(Call call, Response response) throws IOException { System.out.print(response.body().string()); }
 			});
 			return true;
 
 		}
-		@Override
-		public List<String[]> readCSV(List<String[]> csv) throws IOException {
-			// Define the bucket and key for the CSV file in the forwarded folder
-			String bucketName = "rl2qdatatestcsv";
-			String key = "rl2q forwarded data/queue.csv";
 
-
-			// Create an S3 client to retrieve the object
-			try (S3Client s3 = S3Client.builder()
-					.region(Region.EU_WEST_2)
-					.credentialsProvider(StaticCredentialsProvider.create(testCredentials))
-					.build()) {
-
-				GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-						.bucket(bucketName)
-						.key(key)
-						.build();
-
-				try (ResponseInputStream<GetObjectResponse> s3Object = s3.getObject(getObjectRequest)) {
-					// Read the CSV content as a String (assumes UTF-8 encoding)
-					String csvContent = new String(s3Object.readAllBytes(), StandardCharsets.UTF_8);
-
-					// Clear the provided list (which may be used by your side panel update)
-					csv.clear();
-					String[] CSVLines = csvContent.split("\n");
-
-					// Process each line from the CSV
-					for (String line : CSVLines) {
-						// Skip header lines (assuming the header starts with "Priority")
-						if (line.trim().startsWith("Priority")) {
-							continue;
-						}
-
-						// Split the line on commas
-						String[] LineItems = line.split(",");
-
-						// Make sure we have at least 6 columns (one for each field)
-						if (LineItems.length < 6) {
-							continue;
-						}
-
-						// Trim values to remove any extra whitespace
-						String priority = LineItems[0].trim();
-						String customerName = LineItems[1].trim();
-						String status = LineItems[2].trim();
-						String id = LineItems[3].trim();
-						String item = LineItems[4].trim();
-						String notes = LineItems[5].trim();
-
-						// Add the row to the CSV list that will update the side panel
-						csv.add(new String[]{priority, customerName, status, id, item, notes});
-					}
-					return csv;
-				}
-			} catch (Exception e) {
-				throw new IOException("Error fetching CSV from S3: " + e.getMessage(), e);
-			}
-		}
 
 
 		@Override
@@ -318,47 +249,85 @@
 
 
 		public boolean updateQueuebackend(StringBuilder urlList, String name) throws IOException {
-			String bucketName = "rl2qdatatestcsv";
-			String key = "rl2q received data/" + generateFileName(name); // Save in the correct folder
+			OkHttpClient client = Basclient;
+			HttpUrl url = apiBase.newBuilder()
+					.addPathSegment("queuespecific")
+					.build();
 
-			// Convert the CSV content to a String
-			String csvContent = urlList.toString();
+			Request request = new Request.Builder()
+					.header("User-Agent", "RuneLite")
+					.url(url)
+					.header("Content-Type", "application/json")
+					.header("x-api-key", this.apikey)
+					.header("returncsv", "0")//treat 0/1 as true/false respectively
+					.header("rankname", name)
+					.header("csv", urlList.toString().replace("\u00A0", " "))
+					.build();
 
-			// Replace non-breaking spaces with regular spaces
-			csvContent = csvContent.replace("\u00A0", " ");
+			client.newCall(request).enqueue(new Callback()
+			{
+				@Override
+				public void onFailure(Call call, IOException e)
+				{
 
-			// Remove the #[number] parts if desired (e.g., "Gizzy#1" becomes "Gizzy")
-			csvContent = csvContent.replaceAll("#-?\\d+", "");
+				}
 
-			// Set your test credentials (only for testing; do not hardcode in production)
-
-			//TODO Credentials go here
-
-			try (S3Client s3 = S3Client.builder()
-					.region(Region.EU_WEST_2)
-					.credentialsProvider(StaticCredentialsProvider.create(testCredentials))
-					.build()) {
-
-				s3.putObject(
-						PutObjectRequest.builder()
-								.bucket(bucketName)
-								.key(key)
-								.contentType("text/csv; charset=utf-8")  // Set proper content type and charset
-								.build(),
-						RequestBody.fromString(csvContent, StandardCharsets.UTF_8)
-				);
-
-				System.out.println("File uploaded to S3: " + key);
-				return true;
-			} catch (Exception e) {
-				System.err.println("S3 upload failed: " + e.getMessage());
-				return false;
-			}
+				@Override
+				public void onResponse(Call call, Response response) throws IOException { System.out.print(response.body().string()+"\n"); }
+			});
+			return true;
 		}
 
-		private String generateFileName(String name) {
-			return "queue.csv";
+		@Override
+		public List<String[]> readCSV(List<String[]> csv) throws IOException {
+			OkHttpClient client = Basclient;
+			HttpUrl url = apiBase.newBuilder()
+					.addPathSegment("queuespecific")
+					.build();
+
+			Request request = new Request.Builder()
+					.header("User-Agent", "RuneLite")
+					.url(url)
+					.header("Content-Type", "application/json")
+					.header("x-api-key", this.apikey)
+					.header("returncsv", "1")//treat 0/1 as true/false respectively
+					.header("rankname", "get")
+					.build();
+
+			client.newCall(request).enqueue(new Callback()
+			{
+				@Override
+				public void onFailure(Call call, IOException e)
+				{
+
+				}
+
+				@Override
+				public void onResponse(Call call, Response response) throws IOException {
+					String data = response.body().string().split("body\": \"")[1].replace("}","");
+					//System.out.print(data);
+					 csvData = new ArrayList<>();
+					String[] lines = data.split("\\\\r\\\\n");
+
+					for (String line : lines) {
+						String[] values = line.split(",");
+						csvData.add(values);
+					}
+					response.close();
+					/*for(String[] blah: csvData){
+						for(String blahs: blah){
+							System.out.print(blahs + ",");
+						}
+						System.out.print("\n");
+					}*/
+					//System.out.print("\n");
+				}
+			});
+			//System.out.print(csvData);
+			return csvData;//by way of how the enqueue/callback works this is always 1 refresh behind.... not the end of the world but annoying
 		}
+
+
 
 		@Override//TODO make this work(L0l)
 		public boolean addCustomer(String itemName, String priority, String custName, String addedBy) throws IOException
@@ -435,5 +404,9 @@
 			});
 			return true;
 		}
+
+
+
+
 
 	}

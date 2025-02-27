@@ -115,10 +115,25 @@ public class Queue
 	private void createQueue() throws IOException
 	{
 		this.OldQueue = httpClient.readCSV(this.OldQueue);
+		if(this.OldQueue == null){
+			return;
+		}
 		for (String[] CSVLine : this.OldQueue)
 		{
-			this.CurrentQueue.put(CSVLine[1], new Customer(CSVLine[1], CSVLine[3], CSVLine[0], CSVLine[2], CSVLine[5], CSVLine[4]));
-		}
+			try {
+				this.CurrentQueue.put(CSVLine[1], new Customer(CSVLine[1], CSVLine[3], CSVLine[0], CSVLine[2], CSVLine[5], CSVLine[4]));
+			} catch (Exception e) {
+				/*for(String line:CSVLine){
+					System.out.print(line+",");
+				}
+				System.out.print("\n");*/
+				if(CSVLine[0].equals("P")||CSVLine[0].equals("R")) {
+					this.CurrentQueue.put(CSVLine[1], new Customer(CSVLine[1], CSVLine[3], CSVLine[0], CSVLine[2], " ", CSVLine[4]));
+				}
+				//this catches some suboptimal creation actuall yhanldes when ppl use , in the notes column
+            }
+
+        }
 	}
 
 	public NavigationButton getNav()
