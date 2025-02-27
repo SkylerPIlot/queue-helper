@@ -27,12 +27,16 @@ package com.queuehelper;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Provides;
+
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.time.Instant;
 import java.util.ArrayList;
 import javax.swing.SwingUtilities;
+
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
@@ -121,11 +125,21 @@ public class BASPlugin extends Plugin implements ActionListener {
 		}
 	}
 
+	private int inGameBit = 0;
+	private String currentWave = START_WAVE;
+
+	@Getter
+	private Round currentRound;
+
+
+
 	protected void shutDown() throws Exception {
 		clientToolbar.removeNavigation(navButton);
 		this.queue = null;
 		httpclient = null;
-
+		gameTime = null;
+		currentWave = START_WAVE;
+		inGameBit = 0;
 	}
 
 
@@ -206,6 +220,22 @@ public class BASPlugin extends Plugin implements ActionListener {
 
 	@Subscribe
 	public void onChatMessage(ChatMessage chatMessage) {
+
+		if (chatMessage.getType() == ChatMessageType.GAMEMESSAGE
+				&& chatMessage.getMessage().startsWith("---- Wave:"))
+		{
+			String[] message = chatMessage.getMessage().split(" ");
+			currentWave = message[BA_WAVE_NUM_INDEX];
+
+			if (currentWave.equals(START_WAVE))
+			{
+				gameTime = new GameTimer();
+				pointsHealer = pointsDefender = pointsCollector = pointsAttacker = totalEggsCollected = totalIncorrectAttacks = totalHealthReplenished = 0;
+			}
+
+		}
+
+
 		if (!isRank() || chatMessage.getType() != ChatMessageType.FRIENDSCHAT) {
 			return;
 		}
@@ -349,9 +379,8 @@ public class BASPlugin extends Plugin implements ActionListener {
 	private static final int BA_WAVE_NUM_INDEX = 2;
 	private static final String START_WAVE = "1";
 	private static final String ENDGAME_REWARD_NEEDLE_TEXT = "<br>5";
-	private String currentWave = START_WAVE;
 	private String round_role;
-	private Boolean scanning;
+	private Boolean scanning = false;
 	private int round_roleID;
 	private Boolean leech;
 	//defines all of my specific widgets and icon names could I do it better yes, but like it works
@@ -385,33 +414,14 @@ public class BASPlugin extends Plugin implements ActionListener {
 
 
 
+	private int pointsHealer, pointsDefender , pointsCollector, pointsAttacker, totalEggsCollected, totalIncorrectAttacks, totalHealthReplenished;
+	final int[] childIDsOfPointsWidgets = new int[]{33, 32, 25, 26, 24, 28, 31, 27, 29, 30, 21, 22, 19};
+
+	@Subscribe
 	public void onWidgetLoaded(WidgetLoaded event) throws IOException//exception required to run .flush()
 	{
 		switch (event.getGroupId())
 		{
-			case WidgetID.BA_REWARD_GROUP_ID:
-			{
-				Widget rewardWidget = client.getWidget(WidgetInfo.BA_REWARD_TEXT);
-
-				if (rewardWidget != null && rewardWidget.getText().contains(ENDGAME_REWARD_NEEDLE_TEXT) && gameTime != null && leech && isRank())
-				{
-
-					if(queue.doesCustExist(player3.getText()))
-					{
-						this.queue.sendRoundMsd(leader.getText(), player1.getText(), player2.getText(), player3.getText(), player4.getText(), gameTime.getPBTime(), queue.getCustomer(player3.getText()).getPriority(), queue.getCustomer(player3.getText()).getItem());
-
-					}
-					else
-					{
-						this.queue.sendRoundMsd(leader.getText(), player1.getText(), player2.getText(), player3.getText(), player4.getText(), gameTime.getPBTime(), "Unknown", "Unknown");
-
-					}
-					gameTime = null;
-					leech = false;
-				}
-
-				break;
-			}
 			case WidgetID.BA_TEAM_GROUP_ID: {
 				scanning = true;
 				leech = false;
@@ -422,12 +432,139 @@ public class BASPlugin extends Plugin implements ActionListener {
 			case 158: {//this is to set scanning true when scroll is used on someone
 				scanning = true;
 			}
+			case WidgetID.BA_REWARD_GROUP_ID:
+			{
+				Widget rewardWidget = client.getWidget(WidgetInfo.BA_REWARD_TEXT);
+				Widget pointsWidget = client.getWidget(WidgetID.BA_REWARD_GROUP_ID, 14); //RUNNERS_PASSED
+
+				// Wave 10 ended
+				if (rewardWidget != null && rewardWidget.getText().contains(ENDGAME_REWARD_NEEDLE_TEXT) && gameTime != null)
+				{
+					ChatMessageBuilder message = new ChatMessageBuilder()
+							.append("Attacker: ")
+							.append(Color.red, pointsAttacker + 80 + "")
+							.append(" |  Healer: ")
+							.append(Color.GREEN, pointsHealer + 80 + "")
+							.append(" | Defender: ")
+							.append(Color.blue, pointsDefender + 80 + "")
+							.append(" | Collector: ")
+							.append(Color.yellow, pointsCollector + 80 + "")
+							.append(System.getProperty("line.separator"))
+							.append(totalEggsCollected + " eggs collected, " + totalHealthReplenished + "HP vialed and " + totalIncorrectAttacks + " wrong attacks.");
+
+					String leechRole = IDfinder(player3.getModelId());
+					int finalPointsAttacker = pointsAttacker + 80;
+					int finalPointsHealer = pointsHealer + 80;
+					int finalPointsDefender = pointsDefender + 80;
+					int finalPointsCollector = pointsCollector + 80;
+					System.out.print("Total Points attacker this wave: "+ finalPointsAttacker+"\n");
+					System.out.print("Total Points healer this wave: "+ finalPointsHealer+"\n");
+					System.out.print("Total Points defender this wave: "+ finalPointsDefender+"\n");
+					System.out.print("Total Points coll this wave: "+ finalPointsCollector+"\n");
+					System.out.print("game time:"+gameTime.getPBTime()+"\n");
+					System.out.print("Total HP rep coll this wave: "+ totalHealthReplenished+"\n");
+					System.out.print("Total Points lost as att this wave: "+ totalIncorrectAttacks+"\n");
+					System.out.print("Total eggs coll picked up this wave: "+ totalEggsCollected+"\n");
+
+					System.out.print("Healer identified as: "+ totalEggsCollected+"\n");
+					System.out.print("Defender identified as: "+ totalEggsCollected+"\n");
+					System.out.print("Attacker identified as: "+ totalEggsCollected+"\n");
+					System.out.print("Collecter identified as: "+ totalEggsCollected+"\n");
+
+					//TODO please don't forget to change this back to actually check instead of just true (leech && isRank())
+					if(true) {
+						if (queue.doesCustExist(player3.getText())) {
+							this.queue.sendRoundMsd(leader.getText(), player1.getText(), player2.getText(), player3.getText(),
+									player4.getText(), gameTime.getPBTime(), queue.getCustomer(player3.getText()).getPriority(), queue.getCustomer(player3.getText()).getItem()
+							,finalPointsAttacker, finalPointsDefender, finalPointsHealer, finalPointsCollector, totalEggsCollected, totalHealthReplenished, totalIncorrectAttacks,leechRole);
+
+						} else {
+							this.queue.sendRoundMsd(leader.getText(), player1.getText(), player2.getText(), player3.getText(),
+									player4.getText(), gameTime.getPBTime(), "Unknown", "Unknown"
+									,finalPointsAttacker, finalPointsDefender, finalPointsHealer, finalPointsCollector, totalEggsCollected, totalHealthReplenished, totalIncorrectAttacks,leechRole);
+
+						}
+						gameTime = null;
+						leech = false;
+					}
+
+
+
+
+				}
+
+				// Wave 1-9 ended
+				else if (pointsWidget != null && client.getVar(Varbits.IN_GAME_BA) == 0)
+				{
+					int wavePoints_Attacker, wavePoints_Defender, wavePoints_Healer, wavePoints_Collector, waveEggsCollected, waveHPReplenished, waveFailedAttacks;
+
+					wavePoints_Attacker = wavePoints_Defender = wavePoints_Healer = wavePoints_Collector = Integer.parseInt(client.getWidget(WidgetID.BA_REWARD_GROUP_ID, childIDsOfPointsWidgets[0]).getText()); //set base pts to all roles
+					waveEggsCollected = waveHPReplenished = waveFailedAttacks = 0;
+
+					// Gather post-wave info from points widget
+					for (int i = 0; i < childIDsOfPointsWidgets.length; i++)
+					{
+						int value = Integer.parseInt(client.getWidget(WidgetID.BA_REWARD_GROUP_ID, childIDsOfPointsWidgets[i]).getText());
+
+						switch (i)
+						{
+							case 1:
+							case 2:
+							case 3:
+								wavePoints_Attacker += value;
+								break;
+							case 4:
+							case 5:
+								wavePoints_Defender += value;
+								break;
+							case 6:
+								wavePoints_Collector += value;
+								break;
+							case 7:
+							case 8:
+							case 9:
+								wavePoints_Healer += value;
+								break;
+							case 10:
+								waveEggsCollected = value;
+								totalEggsCollected += value;
+
+								break;
+							case 11:
+								waveFailedAttacks = value;
+								totalIncorrectAttacks += value;
+								break;
+							case 12:
+								waveHPReplenished = value;
+								totalHealthReplenished += value;
+								break;
+						}
+					}
+
+					pointsCollector += wavePoints_Collector;
+					pointsHealer += wavePoints_Healer;
+					pointsDefender += wavePoints_Defender;
+					pointsAttacker += wavePoints_Attacker;
+					System.out.print("Points collected this wave: "+ wavePoints_Collector+"\n");
+					System.out.print("Points healer this wave: "+ wavePoints_Healer+"\n");
+					System.out.print("Points defender this wave: "+ wavePoints_Defender+"\n");
+					System.out.print("Points attacker this wave: "+ wavePoints_Attacker+"\n");
+					System.out.print("Healer identified as: "+ totalEggsCollected+"\n");
+					System.out.print("Defender identified as: "+ totalEggsCollected+"\n");
+					System.out.print("Attacker identified as: "+ totalEggsCollected+"\n");
+					System.out.print("Collecter identified as: "+ totalEggsCollected+"\n");
+					//TODO HERE
+				}
+
+				break;
+
+			}
+
 		}
 	}
 	@Subscribe
 	public void onGameTick(GameTick event)
 	{
-
 		if(scanning) {
 			final String player;
 			player = client.getLocalPlayer().getName();
@@ -491,3 +628,33 @@ public class BASPlugin extends Plugin implements ActionListener {
 
 
 }
+
+
+
+
+
+
+
+
+
+
+/*Widget rewardWidget = client.getWidget(WidgetInfo.BA_REWARD_TEXT);
+
+				if (rewardWidget != null && rewardWidget.getText().contains(ENDGAME_REWARD_NEEDLE_TEXT) && gameTime != null && leech && isRank())
+				{
+
+					if(queue.doesCustExist(player3.getText()))
+					{
+						this.queue.sendRoundMsd(leader.getText(), player1.getText(), player2.getText(), player3.getText(), player4.getText(), gameTime.getPBTime(), queue.getCustomer(player3.getText()).getPriority(), queue.getCustomer(player3.getText()).getItem());
+
+					}
+					else
+					{
+						this.queue.sendRoundMsd(leader.getText(), player1.getText(), player2.getText(), player3.getText(), player4.getText(), gameTime.getPBTime(), "Unknown", "Unknown");
+
+					}
+					gameTime = null;
+					leech = false;
+				}
+
+				break;*/

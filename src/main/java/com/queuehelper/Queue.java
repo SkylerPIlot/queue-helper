@@ -254,11 +254,16 @@ public class Queue
 		httpClient.updateQueuebackend(csvBuilder, "queue.csv");
 	}
 
-	public void sendRoundMsd(String main, String collector, String healer, String leech, String defender, int time, String premiumType, String item){
+	public void sendRoundMsd(String main, String collector, String healer, String leech, String defender, int time, String premiumType, String item
+			,int attpts, int defpts, int healpts, int collpts, int eggsCollected, int hpHealed, int wrongAtts,String leechrole){
 		int premID = 0;
 		if(!premiumType.equals("R")){
 			premID = 1;
 		}
-		httpClient.sendRoundTimeServer(main, collector, healer, leech, defender, time, premID, item);
+		httpClient.sendRoundTimeServer(main, collector, healer, leech, defender, time, premID, item, attpts,  defpts,  healpts,  collpts,  eggsCollected,  hpHealed,  wrongAtts, leechrole);
+	}
+
+	public Customer getCustomer(String name){
+		return CurrentQueue.get(name);
 	}
 }

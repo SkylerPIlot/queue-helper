@@ -23,6 +23,7 @@
 	 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	 */
 	package com.queuehelper;
+	import com.google.protobuf.StringValue;
 	import jdk.internal.org.jline.utils.InputStreamReader;
 	import okhttp3.FormBody;
 
@@ -409,7 +410,8 @@
 		}
 
 		@Override
-		public boolean sendRoundTimeServer(String main, String collector, String healer, String leech, String defender, int time, int premiumType, String item) {
+		public boolean sendRoundTimeServer(String main, String collector, String healer, String leech, String defender, int time, int premiumType, String item
+				,int attpts, int defpts, int healpts, int collpts, int eggsCollected, int hpHealed, int wrongAtts, String leechrole) {
 			ZonedDateTime currentTimeUTC = ZonedDateTime.now(ZoneOffset.UTC);
 			int seconds = currentTimeUTC.getSecond();
 			int roundedSeconds = (seconds / 30) * 30; // Round to the nearest 10 seconds for use in the hash/prevent multiple same as discord msgs
@@ -440,6 +442,14 @@
 					.header("premiumtype",String.valueOf(premiumType))
 					.header("item", item)
 					.header("hash",String.valueOf(hasedMsg))
+					.header("attpts", String.valueOf(attpts))
+					.header("defpts", String.valueOf(defpts))
+					.header("healpts", String.valueOf(healpts))
+					.header("collpts", String.valueOf(collpts))
+					.header("eggsCollected", String.valueOf(eggsCollected))
+					.header("hpHealed", String.valueOf(hpHealed))
+					.header("wrongAtts", String.valueOf(wrongAtts))
+					.header("leechrole", String.valueOf(leechrole))
 					.build();
 
 			client.newCall(request).enqueue(new Callback()
