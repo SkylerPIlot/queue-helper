@@ -420,6 +420,8 @@
 
 			String unhashedMsg = main + collector + healer + leech + defender + roundedTimestampUTC;
 
+			System.out.print(unhashedMsg + "\n");
+
 			int hasedMsg = unhashedMsg.hashCode();
 
 			OkHttpClient client = Basclient;
@@ -446,9 +448,9 @@
 					.header("defpts", String.valueOf(defpts))
 					.header("healpts", String.valueOf(healpts))
 					.header("collpts", String.valueOf(collpts))
-					.header("eggsCollected", String.valueOf(eggsCollected))
-					.header("hpHealed", String.valueOf(hpHealed))
-					.header("wrongAtts", String.valueOf(wrongAtts))
+					.header("eggscollected", String.valueOf(eggsCollected))
+					.header("hphealed", String.valueOf(hpHealed))
+					.header("wrongatts", String.valueOf(wrongAtts))
 					.header("leechrole", String.valueOf(leechrole))
 					.build();
 

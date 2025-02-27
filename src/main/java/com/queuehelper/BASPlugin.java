@@ -122,6 +122,14 @@ public class BASPlugin extends Plugin implements ActionListener {
 			clientToolbar.addNavigation(navButton);
 			SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
 			this.fontSize = config.fontSize();
+
+
+				this.queue.sendRoundMsd("leader","coll", "healer", "leech",
+						"defender", 900, "0", "torso"
+						,3232, 222, 123, 3232, 2132, 12, 2222,"Collector");
+
+
+
 		}
 	}
 
@@ -466,10 +474,10 @@ public class BASPlugin extends Plugin implements ActionListener {
 					System.out.print("Total Points lost as att this wave: "+ totalIncorrectAttacks+"\n");
 					System.out.print("Total eggs coll picked up this wave: "+ totalEggsCollected+"\n");
 
-					System.out.print("Healer identified as: "+ totalEggsCollected+"\n");
-					System.out.print("Defender identified as: "+ totalEggsCollected+"\n");
-					System.out.print("Attacker identified as: "+ totalEggsCollected+"\n");
-					System.out.print("Collecter identified as: "+ totalEggsCollected+"\n");
+					System.out.print("Healer identified as: "+ player2.getText()+"\n");
+					System.out.print("Defender identified as: "+ player4.getText()+"\n");
+					System.out.print("Attacker identified as: "+ leader.getText()+"\n");
+					System.out.print("Collecter identified as: "+ player1.getText()+"\n");
 
 					//TODO please don't forget to change this back to actually check instead of just true (leech && isRank())
 					if(true) {
@@ -549,10 +557,11 @@ public class BASPlugin extends Plugin implements ActionListener {
 					System.out.print("Points healer this wave: "+ wavePoints_Healer+"\n");
 					System.out.print("Points defender this wave: "+ wavePoints_Defender+"\n");
 					System.out.print("Points attacker this wave: "+ wavePoints_Attacker+"\n");
-					System.out.print("Healer identified as: "+ totalEggsCollected+"\n");
-					System.out.print("Defender identified as: "+ totalEggsCollected+"\n");
-					System.out.print("Attacker identified as: "+ totalEggsCollected+"\n");
-					System.out.print("Collecter identified as: "+ totalEggsCollected+"\n");
+					System.out.print("Healer identified as: "+ player2.getText()+"\n");
+					System.out.print("Defender identified as: "+ player4.getText()+"\n");
+					System.out.print("Attacker identified as: "+ leader.getText()+"\n");
+					System.out.print("Collecter identified as: "+ player1.getText()+"\n");
+					System.out.print("Eggs collected identified as: "+ totalEggsCollected+"\n");
 					//TODO HERE
 				}
 
