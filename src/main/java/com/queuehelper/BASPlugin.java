@@ -460,7 +460,7 @@ public class BASPlugin extends Plugin implements ActionListener {
 							.append(System.getProperty("line.separator"))
 							.append(totalEggsCollected + " eggs collected, " + totalHealthReplenished + "HP vialed and " + totalIncorrectAttacks + " wrong attacks.");
 
-					String leechRole = IDfinder(player3.getModelId());
+					String leechRole = IDfinder(client.getWidget(BaRoleWidget,player3iconID).getModelId());
 					int finalPointsAttacker = pointsAttacker + 80;
 					int finalPointsHealer = pointsHealer + 80;
 					int finalPointsDefender = pointsDefender + 80;
