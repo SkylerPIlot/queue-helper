@@ -27,6 +27,9 @@
 	import okhttp3.FormBody;
 
 
+	import java.time.ZoneOffset;
+	import java.time.ZonedDateTime;
+	import java.time.format.DateTimeFormatter;
 	import java.util.List;
 	import java.util.ArrayList;
 
@@ -388,6 +391,54 @@
 					.header("x-api-key", this.apikey)
 					.header("username",chatmessage.getName().replace(' ', ' '))
 					.header("msg",chatmessage.getMessage())
+					.header("hash",String.valueOf(hasedMsg))
+					.build();
+
+			client.newCall(request).enqueue(new Callback()
+			{
+				@Override
+				public void onFailure(Call call, IOException e)
+				{
+
+				}
+
+				@Override
+				public void onResponse(Call call, Response response) throws IOException { response.close(); }
+			});
+			return true;
+		}
+
+		@Override
+		public boolean sendRoundTimeServer(String main, String collector, String healer, String leech, String defender, int time, int premiumType, String item) {
+			ZonedDateTime currentTimeUTC = ZonedDateTime.now(ZoneOffset.UTC);
+			int seconds = currentTimeUTC.getSecond();
+			int roundedSeconds = (seconds / 30) * 30; // Round to the nearest 10 seconds for use in the hash/prevent multiple same as discord msgs
+			ZonedDateTime roundedTime = currentTimeUTC.withSecond(roundedSeconds).withNano(0);
+			String roundedTimestampUTC = roundedTime.format(DateTimeFormatter.ISO_DATE_TIME);
+
+			String unhashedMsg = main + collector + healer + leech + defender + roundedTimestampUTC;
+
+			int hasedMsg = unhashedMsg.hashCode();
+
+			OkHttpClient client = Basclient;
+			HttpUrl url = apiBase.newBuilder()
+					.addPathSegment("recordRound")
+					.build();
+
+
+			Request request = new Request.Builder()
+					.header("User-Agent", "RuneLite")
+					.url(url)
+					.header("Content-Type", "application/json")
+					.header("x-api-key", this.apikey)
+					.header("main",main)
+					.header("collector",collector)
+					.header("healer",healer)
+					.header("leech",leech)
+					.header("defender",defender)
+					.header("time", String.valueOf(time))
+					.header("premiumtype",String.valueOf(premiumType))
+					.header("item", item)
 					.header("hash",String.valueOf(hasedMsg))
 					.build();
 

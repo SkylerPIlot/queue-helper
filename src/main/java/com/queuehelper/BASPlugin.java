@@ -36,6 +36,9 @@ import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetID;
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.chat.ChatColorType;
 import net.runelite.client.chat.ChatMessageBuilder;
 import net.runelite.client.chat.ChatMessageManager;
@@ -159,97 +162,6 @@ public class BASPlugin extends Plugin implements ActionListener {
 	public void onFriendsChatMemberLeft(FriendsChatMemberLeft event) throws IOException {
 		this.queue.ShouldUpdate(true);
 	}
-	/* fix later
-	@Subscribe
-	public void onMenuOpened(MenuOpened event)
-	{
-		if (event.getMenuEntries().length < 2)
-		{
-			return;
-		}
-
-		final MenuEntry entry = event.getMenuEntries()[event.getMenuEntries().length - 2];
-
-		if (entry.getType() != MenuAction.CC_OP_LOW_PRIORITY && entry.getType() != MenuAction.RUNELITE)
-		{
-			return;
-		}
-
-		final int groupId = TO_GROUP(entry.getParam1());
-		final int childId = TO_CHILD(entry.getParam1());
-
-		if (groupId != WidgetInfo.CHATBOX.getGroupId())
-		{
-			return;
-		}
-
-		final Widget widget = client.getWidget(groupId, childId);
-		final Widget parent = widget.getParent();
-
-		if (WidgetInfo.CHATBOX_MESSAGE_LINES.getId() != parent.getId())
-		{
-			return;
-		}
-
-		final int first = WidgetInfo.CHATBOX_FIRST_MESSAGE.getChildId();
-
-		final int dynamicChildId = (childId - first) * 4;
-
-		final Widget messageContents = parent.getChild(dynamicChildId);
-		if (messageContents == null)
-		{
-			return;
-		}
-
-		String playerName = messageContents.getText();
-		String player = playerName.replaceAll("\\[.*\\]", "").trim().replace(":", "");
-
-		client.createMenuEntry(1)
-			.setOption("Add to Queue Sidepanel")
-			.setTarget(entry.getTarget())
-			.setType(MenuAction.RUNELITE)
-			.onClick(e ->
-			{
-				this.basQueuePanel.changeCustomerText(Text.removeTags(Text.toJagexName(player)));
-			});
-	}
-	
-	@Subscribe
-	public void onMenuEntryAdded(MenuEntryAdded event)
-	{
-		final int componentId = event.getActionParam1();
-		int groupId = WidgetInfo.TO_GROUP(componentId);
-		String option = event.getOption();
-
-		if (groupId == WidgetInfo.FRIENDS_LIST.getGroupId() || groupId == WidgetInfo.FRIENDS_CHAT.getGroupId()
-			|| componentId == WidgetInfo.CLAN_MEMBER_LIST.getId() || componentId == WidgetInfo.CLAN_GUEST_MEMBER_LIST.getId())
-		{
-			boolean after;
-
-			if (AFTER_OPTIONS.contains(option))
-			{
-				after = true;
-			}
-			else if (BEFORE_OPTIONS.contains(option))
-			{
-				after = false;
-			}
-			else
-			{
-				return;
-			}
-
-			client.createMenuEntry(after ? -2 : -1)
-				.setOption("Add to Queue Sidepanel")
-				.setTarget(event.getTarget())
-				.setType(MenuAction.RUNELITE)
-				.onClick(e ->
-				{
-					this.basQueuePanel.changeCustomerText(Text.removeTags(Text.toJagexName(event.getTarget())).replaceAll("\\[.*\\]", "").trim().replace(":", ""));
-				});
-		}
-	}
-	*/
 
 	//used in sending discord webhook messages
 	private boolean isRank() {
@@ -429,5 +341,153 @@ public class BASPlugin extends Plugin implements ActionListener {
 		this.refreshQueue();
 		SwingUtilities.invokeLater(() -> basQueuePanel.populate(queue.getQueue()));
 	}
+
+
+	//this is where the fun stuff happens!
+
+	private GameTimer gameTime;
+	private static final int BA_WAVE_NUM_INDEX = 2;
+	private static final String START_WAVE = "1";
+	private static final String ENDGAME_REWARD_NEEDLE_TEXT = "<br>5";
+	private String currentWave = START_WAVE;
+	private String round_role;
+	private Boolean scanning;
+	private int round_roleID;
+	private Boolean leech;
+	//defines all of my specific widgets and icon names could I do it better yes, but like it works
+	private Integer BaRoleWidget = 256;
+	private Integer BaScrollWidget = 159;
+	private Integer leaderID = 8;
+	private Integer player1ID = 9;
+	private Integer player2ID = 10;
+	private Integer player3ID = 11;
+	private Integer player4ID = 12;
+	private Integer leadericonID = 18;
+	private Integer player1iconID = 19;
+	private Integer player2iconID = 20;
+	private Integer player3iconID = 21;
+	private Integer player4iconID = 22;
+	private Integer attackerIcon = 20561;
+	private Integer defenderIcon = 20566;
+	private Integer collectorIcon = 20563;
+	private Integer healerIcon = 20569;
+
+	Widget leader;
+	Widget leaderIcon;
+	Widget player1;
+	Widget player1Icon;
+	Widget player2;
+	Widget player2Icon;
+	Widget player3;
+	Widget player3Icon;
+	Widget player4;
+	Widget player4Icon;
+
+
+
+	public void onWidgetLoaded(WidgetLoaded event) throws IOException//exception required to run .flush()
+	{
+		switch (event.getGroupId())
+		{
+			case WidgetID.BA_REWARD_GROUP_ID:
+			{
+				Widget rewardWidget = client.getWidget(WidgetInfo.BA_REWARD_TEXT);
+
+				if (rewardWidget != null && rewardWidget.getText().contains(ENDGAME_REWARD_NEEDLE_TEXT) && gameTime != null && leech && isRank())
+				{
+
+					if(queue.doesCustExist(player3.getText()))
+					{
+						this.queue.sendRoundMsd(leader.getText(), player1.getText(), player2.getText(), player3.getText(), player4.getText(), gameTime.getPBTime(), queue.getCustomer(player3.getText()).getPriority(), queue.getCustomer(player3.getText()).getItem());
+
+					}
+					else
+					{
+						this.queue.sendRoundMsd(leader.getText(), player1.getText(), player2.getText(), player3.getText(), player4.getText(), gameTime.getPBTime(), "Unknown", "Unknown");
+
+					}
+					gameTime = null;
+					leech = false;
+				}
+
+				break;
+			}
+			case WidgetID.BA_TEAM_GROUP_ID: {
+				scanning = true;
+				leech = false;
+			}
+			case 159: {//this is to set scanning true when scroll is used on someone
+				scanning = true;
+			}
+			case 158: {//this is to set scanning true when scroll is used on someone
+				scanning = true;
+			}
+		}
+	}
+	@Subscribe
+	public void onGameTick(GameTick event)
+	{
+
+		if(scanning) {
+			final String player;
+			player = client.getLocalPlayer().getName();
+			leader = client.getWidget(BaRoleWidget, leaderID);
+			leaderIcon = client.getWidget(BaRoleWidget, leadericonID);
+			player1 = client.getWidget(BaRoleWidget, player1ID);
+			player1Icon = client.getWidget(BaRoleWidget, player1iconID);
+			player2 = client.getWidget(BaRoleWidget, player2ID);
+			player2Icon = client.getWidget(BaRoleWidget, player2iconID);
+			player3 = client.getWidget(BaRoleWidget, player3ID);
+			player3Icon = client.getWidget(BaRoleWidget, player3iconID);
+			player4 = client.getWidget(BaRoleWidget, player4ID);
+			player4Icon = client.getWidget(BaRoleWidget, player4iconID);
+			log.debug("Scanning Team");
+
+			if ((player4Icon.getModelId() != leaderIcon.getModelId()) &&  (player4Icon.getModelId() != 65535) && (leaderIcon.getModelId() != 65535)){//this number is the blank icon
+				log.debug("Scanning Complete");
+				log.debug("Leader is {}", leader.getText());
+				log.debug("Player1 is {}", player1.getText());
+				log.debug("Player2 is {}", player2.getText());
+				log.debug("Player3 is {}", player3.getText());
+				log.debug("Player4 is {}", player4.getText());
+				scanning = false;
+
+
+                    for (int i = 8; i < 13; i++)
+				{
+					String player_in_list = (client.getWidget(BaRoleWidget, i).getText());
+					String playerRole = IDfinder(client.getWidget(BaRoleWidget, (i + 10)).getModelId());
+					if (player.compareTo(player_in_list) == 0)//future developers it grabs the name from the string used in this comparison
+					{
+						//this checks which location the name is in the scroll
+						round_roleID = client.getWidget(BaRoleWidget, (i + 10)).getModelId();
+						round_role = IDfinder(round_roleID);
+						log.debug("Your role has been identified as {}", round_role);
+					}
+				}
+				if ((leaderIcon.getModelId() == attackerIcon) && (player1Icon.getModelId() == collectorIcon) && (player2Icon.getModelId() == healerIcon) && (player4Icon.getModelId() == defenderIcon))
+				{
+
+					log.debug("Leeches {} role identified as {}", player3.getText(), IDfinder(player3Icon.getModelId()));
+					round_role = "Leech " + round_role;
+					log.debug("This has been identified as a leech run as {}",round_role);
+					leech = true;
+				}
+
+
+			}
+		}
+	}
+
+
+
+	private String IDfinder(int roleID){
+		if (roleID == attackerIcon) return "Attacker";
+		if (roleID == defenderIcon) return "Defender";
+		if (roleID == collectorIcon) return "Collector";
+		if (roleID == healerIcon) return "Healer";
+		return "";
+	}
+
 
 }

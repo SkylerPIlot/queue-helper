@@ -253,4 +253,12 @@ public class Queue
 		// For example:
 		httpClient.updateQueuebackend(csvBuilder, "queue.csv");
 	}
+
+	public void sendRoundMsd(String main, String collector, String healer, String leech, String defender, int time, String premiumType, String item){
+		int premID = 0;
+		if(!premiumType.equals("R")){
+			premID = 1;
+		}
+		httpClient.sendRoundTimeServer(main, collector, healer, leech, defender, time, premID, item);
+	}
 }
