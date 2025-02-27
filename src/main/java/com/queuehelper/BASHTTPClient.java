@@ -420,7 +420,7 @@
 
 			String unhashedMsg = main + collector + healer + leech + defender + roundedTimestampUTC;
 
-			System.out.print(unhashedMsg + "\n");
+			//System.out.print(unhashedMsg + "\n");
 
 			int hasedMsg = unhashedMsg.hashCode();
 
