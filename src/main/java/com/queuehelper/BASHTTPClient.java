@@ -333,6 +333,7 @@
 
 
 
+
 		@Override//TODO make this work(L0l)
 		public boolean addCustomer(String itemName, String priority, String custName, String addedBy) throws IOException
 		{
@@ -420,8 +421,6 @@
 
 			String unhashedMsg = main + collector + healer + leech + defender + roundedTimestampUTC;
 
-			//System.out.print(unhashedMsg + "\n");
-
 			int hasedMsg = unhashedMsg.hashCode();
 
 			OkHttpClient client = Basclient;
@@ -451,6 +450,7 @@
 					.header("eggscollected", String.valueOf(eggsCollected))
 					.header("hphealed", String.valueOf(hpHealed))
 					.header("wrongatts", String.valueOf(wrongAtts))
+
 					.header("leechrole", String.valueOf(leechrole))
 					.build();
 
