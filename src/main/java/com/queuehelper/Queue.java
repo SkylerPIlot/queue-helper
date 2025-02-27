@@ -155,6 +155,7 @@ public class Queue
 
 	public void refresh() throws IOException
 	{
+		this.plugin.updateQueue();
 		this.CurrentQueue.clear();
 		this.createQueue();
 	}

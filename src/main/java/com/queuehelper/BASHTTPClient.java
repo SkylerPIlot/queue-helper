@@ -211,7 +211,7 @@
 					.build();
 
 			/*
-				3 == offline
+				3 == online
 				0 == cooldown
 				2 == done
 				1 == in progress
