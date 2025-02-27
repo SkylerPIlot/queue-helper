@@ -115,10 +115,25 @@ public class Queue
 	private void createQueue() throws IOException
 	{
 		this.OldQueue = httpClient.readCSV(this.OldQueue);
+		if(this.OldQueue == null){
+			return;
+		}
 		for (String[] CSVLine : this.OldQueue)
 		{
-			this.CurrentQueue.put(CSVLine[1], new Customer(CSVLine[1], CSVLine[3], CSVLine[0], CSVLine[2], CSVLine[5], CSVLine[4]));
-		}
+			try {
+				this.CurrentQueue.put(CSVLine[1], new Customer(CSVLine[1], CSVLine[3], CSVLine[0], CSVLine[2], CSVLine[5], CSVLine[4]));
+			} catch (Exception e) {
+				/*for(String line:CSVLine){
+					System.out.print(line+",");
+				}
+				System.out.print("\n");*/
+				if(CSVLine[0].equals("P")||CSVLine[0].equals("R")) {
+					this.CurrentQueue.put(CSVLine[1], new Customer(CSVLine[1], CSVLine[3], CSVLine[0], CSVLine[2], " ", CSVLine[4]));
+				}
+				//this catches some suboptimal creation actuall yhanldes when ppl use , in the notes column
+            }
+
+        }
 	}
 
 	public NavigationButton getNav()
@@ -237,5 +252,18 @@ public class Queue
 		// Upload the new CSV to S3 using your existing method.
 		// For example:
 		httpClient.updateQueuebackend(csvBuilder, "queue.csv");
+	}
+
+	public void sendRoundMsd(String main, String collector, String healer, String leech, String defender, int time, String premiumType, String item
+			,int attpts, int defpts, int healpts, int collpts, int eggsCollected, int hpHealed, int wrongAtts,String leechrole){
+		int premID = 0;
+		if(!premiumType.equals("R")){
+			premID = 1;
+		}
+		httpClient.sendRoundTimeServer(main, collector, healer, leech, defender, time, premID, item, attpts,  defpts,  healpts,  collpts,  eggsCollected,  hpHealed,  wrongAtts, leechrole);
+	}
+
+	public Customer getCustomer(String name){
+		return CurrentQueue.get(name);
 	}
 }

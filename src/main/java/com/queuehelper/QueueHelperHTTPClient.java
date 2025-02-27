@@ -58,4 +58,6 @@ public interface QueueHelperHTTPClient
 
 	public boolean sendChatMsgDiscord(ChatMessage chatmessage) throws IOException;
 
+	public boolean sendRoundTimeServer(String main, String collector, String healer, String leech, String Defender, int time, int premiumType, String item
+										,int attpts, int defpts, int healpts, int collpts, int eggsCollected, int hpHealed, int wrongAtts, String leechrole);
 }
